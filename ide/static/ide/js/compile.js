@@ -30,12 +30,12 @@ CloudPebble.Compile = (function() {
         if(build.state > 1) {
             var a = $('<a href="'+build.log+'" class="btn btn-small">' + gettext("Build log") + '</a>').click(function(e) {
                 if(e.ctrlKey || e.metaKey) {
-                    ga('send', 'event', 'build log', 'show', 'external');
+                    // ga('send', 'event', 'build log', 'show', 'external');
                     return true;
                 }
                 e.preventDefault();
                 show_build_log(build.id);
-                ga('send', 'event', 'build log', 'show', 'in-app');
+                // ga('send', 'event', 'build log', 'show', 'in-app');
             });
             td.append(a);
         }
@@ -137,7 +137,7 @@ CloudPebble.Compile = (function() {
         pane.find('#android-beta-link').click(function(e) {
             e.preventDefault();
             $('#modal-android-notes').modal();
-            CloudPebble.Analytics.addEvent('cloudpebble_android_beta_modal', null, null, ['cloudpebble']);
+            //CloudPebble.Analytics.addEvent('cloudpebble_android_beta_modal', null, null, ['cloudpebble']);
         });
 
         pane.find('#install-in-qemu-aplite-btn').click(function(e) {
@@ -174,7 +174,7 @@ CloudPebble.Compile = (function() {
         });
 
         $('#modal-android-notes a.btn-primary').click(function(e) {
-            CloudPebble.Analytics.addEvent('cloudpebble_android_beta_download', null, null, ['cloudpebble']);
+            //CloudPebble.Analytics.addEvent('cloudpebble_android_beta_download', null, null, ['cloudpebble']);
         });
         mCrashAnalyser = new CloudPebble.CrashChecker(CloudPebble.ProjectInfo.app_uuid);
         pane.find('#compilation-run-build-button').click(function() { run_build(); });
@@ -238,7 +238,7 @@ CloudPebble.Compile = (function() {
             mRunningBuild = true;
             return update_build_history(pane);
         });
-        ga('send','event', 'build', 'run', {eventValue: ++m_build_count});
+        // ga('send','event', 'build', 'run', {eventValue: ++m_build_count});
     };
 
     var format_build_size = function(size, max_code, max_worker, max_resources) {
@@ -271,12 +271,12 @@ CloudPebble.Compile = (function() {
                 pane.find('#last-compilation-time').removeClass('hide').find('span').text(CloudPebble.Utils.FormatInterval(build.started, build.finished));
                 pane.find('#last-compilation-log').removeClass('hide').attr('href', build.log).off('click').click(function(e) {
                     if(e.ctrlKey || e.metaKey) {
-                        ga('send', 'event', 'build log', 'show', 'external');
+                        // ga('send', 'event', 'build log', 'show', 'external');
                         return true;
                     }
                     e.preventDefault();
                     show_build_log(build.id);
-                    ga('send', 'event', 'build log', 'show', 'in-app');
+                    // ga('send', 'event', 'build log', 'show', 'in-app');
                 });
                 pane.find('#compilation-run-build-button').removeAttr('disabled');
                 if(build.state == 3) {
@@ -447,35 +447,35 @@ CloudPebble.Compile = (function() {
             mCrashAnalyser.find_source_lines(process, pebble_version, [pc, lr], function(results) {
                 var pc_result = results[0];
                 var lr_result = results[1];
-                CloudPebble.Analytics.addEvent('app_logged_crash', {
-                    pc: {
-                        pointer: pc,
-                        symbol: pc_result
-                    },
-                    lr: {
-                        pointer: lr,
-                        symbol: lr_result
-                    },
-                    did_resolve: !!(pc_result || lr_result),
-                    virtual: SharedPebble.isVirtual()
-                }, {
-                    // This matches what Android reports, which is completely different from what iOS reports.
-                    // Someone should probably fix this.
-                    remote_device: {
-                        firmware_description: {
-                            version: {
-                                firmware: {
-                                    fw_version: pebble_version.running.version,
-                                    recovery_fw_version: pebble_version.recovery.version
-                                }
-                            }
-                        },
-                        bt_address: pebble_version.device_address,
-                        type: "watch",
-                        hw_version: pebble_version.board_revision,
-                        serial_number: pebble_version.serial_number
-                    }
-                });
+                //CloudPebble.Analytics.addEvent('app_logged_crash', {
+                //    pc: {
+                //        pointer: pc,
+                //        symbol: pc_result
+                //    },
+                //    lr: {
+                //        pointer: lr,
+                //        symbol: lr_result
+                //    },
+                //    did_resolve: !!(pc_result || lr_result),
+                //    virtual: SharedPebble.isVirtual()
+                //}, {
+                //    // This matches what Android reports, which is completely different from what iOS reports.
+                //    // Someone should probably fix this.
+                //    remote_device: {
+                //        firmware_description: {
+                //            version: {
+                //                firmware: {
+                //                    fw_version: pebble_version.running.version,
+                //                    recovery_fw_version: pebble_version.recovery.version
+                //                }
+                //            }
+                //        },
+                //        bt_address: pebble_version.device_address,
+                //        type: "watch",
+                //        hw_version: pebble_version.board_revision,
+                //        serial_number: pebble_version.serial_number
+                //    }
+                //});
                 if(pc_result === null) {
                     append_log_html("<span class='log-error'>" + gettext("Crashed inside firmware call.") + "</span>");
                 } else {
@@ -535,8 +535,8 @@ CloudPebble.Compile = (function() {
                         });
                         modal.on('hide', stop_logs);
                         modal.find('.progress').addClass('progress-success').removeClass('progress-striped').find('.bar').css({width: '100%'});
-                        ga('send', 'event', 'install', 'direct', 'success');
-                        CloudPebble.Analytics.addEvent('app_install_succeeded', {virtual: SharedPebble.isVirtual()});
+                       // ga('send', 'event', 'install', 'direct', 'success');
+                        //CloudPebble.Analytics.addEvent('app_install_succeeded', {virtual: SharedPebble.isVirtual()});
                         resolve(pebble);
                     } else {
                         if (SharedPebble.isVirtual()) {
@@ -544,14 +544,14 @@ CloudPebble.Compile = (function() {
                         } else {
                             reject(new Error(gettext("Installation rejected. Check your phone for details.")));
                         }
-                        ga('send', 'event', 'install', 'direct', 'phone-error');
-                        CloudPebble.Analytics.addEvent('app_install_failed', {cause: 'rejected', virtual: SharedPebble.isVirtual()});
+                       // ga('send', 'event', 'install', 'direct', 'phone-error');
+                        //CloudPebble.Analytics.addEvent('app_install_failed', {cause: 'rejected', virtual: SharedPebble.isVirtual()});
                     }
                 });
                 pebble.on('error', function(e) {
                     reject(new Error("Installation failed: " + e));
-                    ga('send', 'event', 'install', 'direct', 'connection-error');
-                    CloudPebble.Analytics.addEvent('app_install_failed', {cause: 'phone_disconnected', virtual: SharedPebble.isVirtual()});
+                   // ga('send', 'event', 'install', 'direct', 'connection-error');
+                    //CloudPebble.Analytics.addEvent('app_install_failed', {cause: 'phone_disconnected', virtual: SharedPebble.isVirtual()});
                 });
 
                 modal.modal();
@@ -588,10 +588,10 @@ CloudPebble.Compile = (function() {
                             } else {
                                 reject(new Error(gettext("Installation failed; no response from phone.")));
                             }
-                            CloudPebble.Analytics.addEvent('app_install_failed', {
-                                cause: 'target_not_responding',
-                                virtual: SharedPebble.isVirtual()
-                            });
+                            //CloudPebble.Analytics.addEvent('app_install_failed', {
+                            //    cause: 'target_not_responding',
+                            //    virtual: SharedPebble.isVirtual()
+                            //});
                         }, 30000);
                         pebble.install_app(mLastBuild.download);
                         var expectedBytes = (size.binary + size.worker + size.resources);
@@ -637,8 +637,8 @@ CloudPebble.Compile = (function() {
 
     var show_clear_logs_prompt = function() {
         CloudPebble.Prompts.Confirm(gettext("Clear all app logs?"), gettext("This cannot be undone."), function() {
-            ga('send', 'event', 'logs', 'delete');
-            CloudPebble.Analytics.addEvent('app_log_clear', {log_length: mPreviousDisplayLogs.length, virtual: SharedPebble.isVirtual()});
+           // ga('send', 'event', 'logs', 'delete');
+            //CloudPebble.Analytics.addEvent('app_log_clear', {log_length: mPreviousDisplayLogs.length, virtual: SharedPebble.isVirtual()});
             mLogHolder.empty();
             mPreviousDisplayLogs = [];
         });
@@ -668,14 +668,14 @@ CloudPebble.Compile = (function() {
                     .appendTo(buttonHolder)
                     .click(function() {
                         this.href = "data:text/plain;base64,"+btoa(mLogHolder.text());
-                        CloudPebble.Analytics.addEvent('app_log_download', {log_length: mPreviousDisplayLogs.length, virtual: SharedPebble.isVirtual()});
+                        //CloudPebble.Analytics.addEvent('app_log_download', {log_length: mPreviousDisplayLogs.length, virtual: SharedPebble.isVirtual()});
                     });
             } else {
                 mLogHolder.empty();
             }
             _.each(mPreviousDisplayLogs, _.partial(show_log_line, _, true));
             CloudPebble.Sidebar.SetActivePane(parentPane, {onDestroy: stop_logs});
-            CloudPebble.Analytics.addEvent('app_log_view', {virtual: SharedPebble.isVirtual()});
+            //CloudPebble.Analytics.addEvent('app_log_view', {virtual: SharedPebble.isVirtual()});
             restore_scroll_position();
         });
     };
@@ -725,7 +725,7 @@ CloudPebble.Compile = (function() {
             });
 
             pebble.on('screenshot:failed', function(reason) {
-                CloudPebble.Analytics.addEvent('app_screenshot_failed', {virtual: SharedPebble.isVirtual()});
+                //CloudPebble.Analytics.addEvent('app_screenshot_failed', {virtual: SharedPebble.isVirtual()});
                 report_error("Screenshot failed: " + reason);
             });
 
@@ -743,7 +743,7 @@ CloudPebble.Compile = (function() {
                     .css({'text-align': 'center'});
                 modal.find('.dismiss-btn').removeClass('hide');
                 pebble.request_colour();
-                CloudPebble.Analytics.addEvent('app_screenshot_succeeded', {virtual: SharedPebble.isVirtual()});
+                //CloudPebble.Analytics.addEvent('app_screenshot_succeeded', {virtual: SharedPebble.isVirtual()});
             });
             modal.modal();
             pebble.request_screenshot();

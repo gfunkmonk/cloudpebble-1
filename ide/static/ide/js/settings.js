@@ -11,7 +11,7 @@ CloudPebble.Settings = (function() {
         if(CloudPebble.Sidebar.Restore("settings")) {
             return;
         }
-        ga('send', 'event', 'project', 'load settings');
+        // ga('send', 'event', 'project', 'load settings');
         var pane = settings_template;
         shared_pane = pane;
 
@@ -236,7 +236,7 @@ CloudPebble.Settings = (function() {
                 }).catch(function(error) {
                     display_error(interpolate(gettext("Error: %s"), [error]));
                 });
-                ga('send', 'event', 'project', 'delete');
+                // ga('send', 'event', 'project', 'delete');
             });
         });
 
@@ -258,7 +258,7 @@ CloudPebble.Settings = (function() {
             }).catch(function() {
                 dialog.find('.progress').removeClass('progress-striped').addClass('progress-danger');
             }).finally(function() {
-                ga('send', 'event', 'project', 'export', 'zip');
+                // ga('send', 'event', 'project', 'export', 'zip');
             });
         }
 
@@ -300,7 +300,7 @@ CloudPebble.Settings = (function() {
             var was_array_kind = app_uses_array_appkeys();
             if (to_array_kind == was_array_kind) return;
             appkey_table.mapValues(to_array_kind ? 1 : function(k, v, i) {
-                return !!k.trim() ? i : 0;
+                return k.trim() ? i : 0;
             });
         }
 

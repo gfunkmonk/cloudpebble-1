@@ -1,14 +1,14 @@
 {
 	"name": "cloudpebble",
-	"version": "1.0.0",
-	"description": "It clouds pebbles.",
+	"version": "0.2.2",
+	"description": "It clouds pebbles, yo",
+	"license": "MIT",
 	"dependencies": {
-		"json-loader": "^0.5.4",
-		"restrict-resource-webpack-plugin": "^1.0.0",
-		"rocky-lint": "^2.0.0",
-		"utf8": "^2.1.1",
-		"webpack": "^1.1.3",
-		"webpack-fail-plugin": "^1.0.5"
+		"rocky-lint": "^2.0.1",
+		"updatejs": "^0.4.2",
+		"utf8": "^2.1.1"
 	},
-	"engines": {"node": "6.2.1"}
+	"engines": {
+		"node": "v12.13.0"
+	}
 }

@@ -1,7 +1,7 @@
 import uuid
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.utils import simplejson as json, simplejson
+import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe, require_POST
 from django.utils.translation import ugettext as _
@@ -18,7 +18,7 @@ def list_phones(request):
     user_key = request.user.social_auth.get(provider='pebble').extra_data['access_token']
 
     response = requests.get(
-        '{0}/api/v1/me.json'.format(settings.SOCIAL_AUTH_PEBBLE_ROOT_URL),
+        '{0}/api/v1/me'.format(settings.SOCIAL_AUTH_PEBBLE_ROOT_URL),
         headers={'Authorization': 'Bearer {0}'.format(user_key)},
         params={'client_id': settings.SOCIAL_AUTH_PEBBLE_KEY})
 

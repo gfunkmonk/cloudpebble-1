@@ -148,6 +148,7 @@ var SharedPebble = new (function() {
                         reject(new Error(gettext("Connection interrupted.")));
                     }
                 });
+				console.log(getWebsocketURL());
                 mPebble = new Pebble(getWebsocketURL(), getToken());
                 mPebble.on('all', handlePebbleEvent);
                 mPebble.on('proxy:authenticating', function() {

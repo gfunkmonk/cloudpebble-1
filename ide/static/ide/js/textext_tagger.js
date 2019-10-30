@@ -18,7 +18,7 @@ jQuery.fn.extend({
                             return (!$(this).core().wrapElement().hasClass('disabled'));
                         }
                         else {
-                            if (!!isEnabled) {
+                            if (isEnabled) {
                                 this.wrapElement().removeClass('disabled');
                                 $(self).attr('disabled', false);
                             }

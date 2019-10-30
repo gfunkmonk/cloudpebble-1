@@ -20,7 +20,7 @@ CloudPebble.Timeline = new (function() {
             'delete': 'sdk_pin_deleted'
         };
         if(mCurrentAction) {
-            CloudPebble.Analytics.addEvent(analytics[mCurrentAction], {success: success});
+            //CloudPebble.Analytics.addEvent(analytics[mCurrentAction], {success: success});
             mCurrentAction = null;
         }
         if(success) {
@@ -73,7 +73,7 @@ CloudPebble.Timeline = new (function() {
 
     this.show = function() {
         CloudPebble.Sidebar.SuspendActive();
-        CloudPebble.Analytics.addEvent("cloudpebble_timeline_displayed", {}, null, ["cloudpebble"]);
+        //CloudPebble.Analytics.addEvent("cloudpebble_timeline_displayed", {}, null, ["cloudpebble"]);
         if(CloudPebble.Sidebar.Restore("timeline")) {
             return;
         }

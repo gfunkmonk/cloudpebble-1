@@ -272,11 +272,11 @@
             showLaunchSplash();
             var promise = spawn()
                 .then(function() {
-                    CloudPebble.Analytics.addEvent('qemu_launched', {success: true});
+                    //CloudPebble.Analytics.addEvent('qemu_launched', {success: true});
                     return startVNC();
                 })
                 .catch(function(error) {
-                    CloudPebble.Analytics.addEvent('qemu_launched', {success: false, reason: error.message});
+                    //CloudPebble.Analytics.addEvent('qemu_launched', {success: false, reason: error.message});
                     throw error;
                 });
             mPendingPromise = promise;

@@ -245,7 +245,7 @@ CloudPebble.FuzzyPrompt = (function() {
             kind: prompt_kind,
             selection: (selection ? selection.name.split('.').pop() : null)
         };
-        CloudPebble.Analytics.addEvent("cloudpebble_fuzzyprompt_action", data, null, ['cloudpebble']);
+        //CloudPebble.Analytics.addEvent("cloudpebble_fuzzyprompt_action", data, null, ['cloudpebble']);
     };
 
     // Hide the prompt and refocus on the last thing.
