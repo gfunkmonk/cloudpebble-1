@@ -106,7 +106,7 @@ class TestFindProjectRoot(TestCase):
         """ If a project has an invalid package.json and an appinfo.json, select the latter """
         self.run_test([
             FakeProjectItem("package.json", "{}"),
-            "src/"
+            "src/",
             "src/main.c",
             "appinfo.json"
         ], "", "appinfo.json")
@@ -116,6 +116,27 @@ class TestFindProjectRoot(TestCase):
         self.run_test([
             "MAINTAINERS",
             "package.json",
-            "src/"
+            "src/",
             "src/main.c",
         ], "", "package.json")
+
+    def test_find_most_shallow_project(self):
+        """ Check that the most shallow possible valid-looking project is chosen. """
+        self.run_test([
+            "build/appinfo.json",
+            "build/src/main.c",
+            "package.json",
+            "src/main.c",
+        ], "", "package.json")
+
+    def test_malformed_names_bug(self):
+        """ Test for a bug where characters could be prepended to manifest names. """
+        with self.assertRaises(InvalidProjectArchiveException):
+            self.run_test(["project/rrrpackage.json", "project/rrrsrc/", "project/rrrsrc/main.c"])
+
+    def test_no_source_at_root(self):
+        """ Check that projects still import if all sources are in subdirectories """
+        self.run_test([
+            "project/package.json",
+            "project/src/c/main.c",
+        ], "", "project/package.json")
