@@ -31,14 +31,32 @@
         };
     };
 
-    IB.ColourWhite = new IB.Colour('GColorWhite', 'white', gettext('White'));
-    IB.ColourBlack = new IB.Colour('GColorBlack', 'black', gettext('Black'));
-    IB.ColourClear = new IB.Colour('GColorClear', 'rgba(0, 0, 0, 0)', gettext('Transparent'));
+    IB.ColourModes = {
+        Colour: 0,
+        Monochrome: 1
+    };
+    IB.colourMode = null;
 
     IB.ColourMap = {
-        GColorWhite: IB.ColourWhite,
-        GColorBlack: IB.ColourBlack,
-        GColorClear: IB.ColourClear
+        GColorClear: new IB.Colour('GColorClear', 'rgba(0, 0, 0, 0)', gettext('Transparent'))
+    };
+    _.each(IB.FullColourDescriptionMap, function(colour) {
+        IB.ColourMap[colour.gcolour] = new IB.Colour(colour.gcolour, colour.html, colour.name);
+    });
+
+    IB.ColourClear = IB.ColourMap['GColorClear'];
+    IB.ColourWhite = IB.ColourMap['GColorWhite'];
+    IB.ColourBlack = IB.ColourMap['GColorBlack'];
+    IB.DitheredGray = new IB.Colour('GColorLightGray', '#7F7F7F', 'Gray');
+    IB.makeMonochromeMap = function(is_fill) {
+        colour_map = {};
+        colour_map['GColorWhite'] = IB.ColourWhite;
+        if (is_fill && CloudPebble.ProjectInfo.sdk_version == "3") {
+            colour_map['GColorLightGray'] = IB.DitheredGray;
+        }
+        colour_map['GColorBlack'] = IB.ColourBlack;
+        colour_map['GColorClear'] = IB.ColourClear;
+        return colour_map;
     };
 
     /**

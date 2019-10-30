@@ -22,7 +22,11 @@ MANAGERS = ADMINS
 
 DEFAULT_FROM_EMAIL = _environ.get('FROM_EMAIL', 'CloudPebble <cloudpebble@example.com>')
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ON_CLOUDFLARE = _environ.get('CLOUDFLARE') != ''
+if ON_CLOUDFLARE:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_CF_VISITOR', '{"scheme":"https"}')
+else:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if TRAVIS:
     DATABASES = {
@@ -98,6 +102,7 @@ MEDIA_ROOT = os.getcwd() + '/user_data/build_results/'
 
 SIMPLYJS_ROOT = os.getcwd() + '/ext/simplyjs/'
 PEBBLEJS_ROOT = os.getcwd() + '/ext/pebblejs/'
+C_PRELOAD_ROOT = os.getcwd() + '/c-preload/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -158,7 +163,7 @@ BOWER_INSTALLED_APPS = (
     'jshint/jshint',
     'html.sortable#~0.3.1',
     'alexgorbatchev/jquery-textext',
-    'codemirror#4.2.0',
+    'codemirror#5.15.2',
     'bluebird#3.3.4',
     'kanaka/noVNC#v0.5',
 )
@@ -464,7 +469,6 @@ TD_ENABLED = _environ.get('TD_ENABLED', False)
 MAILCHIMP_API_KEY = _environ.get('MAILCHIMP_API_KEY', None)
 MAILCHIMP_LIST_ID = _environ.get('MAILCHIMP_LIST_ID', None)
 
-AWS_ENABLED = 'AWS_ENABLED' in _environ
 AWS_ACCESS_KEY_ID = _environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = _environ.get('AWS_SECRET_ACCESS_KEY', None)
 

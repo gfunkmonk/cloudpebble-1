@@ -62,16 +62,9 @@ def create_archive(project_id):
 
         send_td_event('cloudpebble_export_project', project=project)
 
-        if not settings.AWS_ENABLED:
-            outfile = '%s%s/%s.zip' % (settings.EXPORT_DIRECTORY, u, prefix)
-            os.makedirs(os.path.dirname(outfile), 0755)
-            shutil.copy(filename, outfile)
-            os.chmod(outfile, 0644)
-            return '%s%s/%s.zip' % (settings.EXPORT_ROOT, u, prefix)
-        else:
-            outfile = '%s/%s.zip' % (u, prefix)
-            s3.upload_file('export', outfile, filename, public=True, content_type='application/zip')
-            return '%s%s' % (settings.EXPORT_ROOT, outfile)
+        outfile = '%s/%s.zip' % (u, prefix)
+        s3.upload_file('export', outfile, filename, public=True, content_type='application/zip')
+        return '%s%s' % (settings.EXPORT_ROOT, outfile)
 
 
 @shared_task(acks_late=True)
@@ -193,12 +186,13 @@ def do_import_archive(project_id, archive, delete_project=False):
 
                 with transaction.atomic():
                     # We have a resource map! We can now try importing things from it.
-                    project_options, media_map, dependencies = load_manifest_dict(manifest_dict, manifest_kind)
+                    project_options, media_map, dependencies, published_media = load_manifest_dict(manifest_dict, manifest_kind)
 
                     for k, v in project_options.iteritems():
                         setattr(project, k, v)
                     project.full_clean()
                     project.set_dependencies(dependencies)
+                    project.set_published_media(published_media)
 
                     RES_PATH = project.resources_path
 

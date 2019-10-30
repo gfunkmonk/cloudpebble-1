@@ -11,7 +11,7 @@
         IB.Layer.call(this, canvas, id);
 
         _.extend(this._properties, {
-            bg: new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourBlack),
+            bg: new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourBlack, true),
             icon_up: new IB.Properties.Bitmap(gettext("Top icon"), ""),
             icon_select: new IB.Properties.Bitmap(gettext("Middle icon"), ""),
             icon_down: new IB.Properties.Bitmap(gettext("Bottom icon"), "")
@@ -32,8 +32,15 @@
             this._properties['icon_' + it].on('change', _.partial(this._handleIconChange, it), this);
         }, this);
 
-        this.setSize(20, 146);
-        this.setPos(124, 3);
+        if (CloudPebble.ProjectInfo.sdk_version == "3") {
+            this.setSize(30, 168);
+            this.setPos(114, 0);
+        }
+        else {
+            this.setSize(20, 146);
+            this.setPos(124, 3);
+        }
+
         this._size.lock();
         this._pos.lock();
     };
@@ -48,7 +55,8 @@
             this._node.css({
                 'background-color': this._backgroundColour.getValue().css
             });
-            var invertIcons = (this._backgroundColour.getValue() != IB.ColourWhite);
+            var monoBgColour = this._backgroundColour.getValue(IB.ColourModes.Monochrome);
+            var invertIcons = (monoBgColour !== IB.ColourWhite && IB.colourMode == IB.ColourModes.Monochrome);
             _.each(this._icon_nodes, function(node, it) {
                 if(invertIcons) {
                     node.addClass('ib-invert');
@@ -71,9 +79,10 @@
                 this._ID + " = action_bar_layer_create();",
                 "action_bar_layer_add_to_window(" + this._ID + ", s_window);"
             ];
-            if(this._backgroundColour != IB.ColourBlack) {
+
+            if(!this._backgroundColour.fullyEquals(IB.ColourBlack)) {
                 init.push("action_bar_layer_set_background_color("
-                    + this._ID + ", " + this._backgroundColour.getValue().name + ");");
+                    + this._ID + ", " + this._backgroundColour.generateCode() + ");");
             }
             _.each(BUTTONS, function(it) {
                 var icon = this._icons[it].getValue();
@@ -93,7 +102,7 @@
             _.each(properties, function(values, property) {
                 switch(property) {
                     case "action_bar_layer_set_background_color":
-                        this._backgroundColour.setValue(IB.ColourMap[values[0][1]]);
+                        this._backgroundColour.setValue(values[0][1]);
                         break;
                     case "action_bar_layer_set_icon":
                         _.each(values, function(group) {

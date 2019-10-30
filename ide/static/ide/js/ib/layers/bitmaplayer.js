@@ -9,7 +9,7 @@
     IB.BitmapLayer = function(canvas, id) {
         IB.Layer.call(this, canvas, id);
         this._resource = new IB.Properties.Bitmap(gettext("Image"), '');
-        this._bg_colour = new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourClear);
+        this._bg_colour = new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourClear, true);
         this._has_changed_image = false;
         this._node.addClass('ib-bitmaplayer');
         this.setSize(40, 40);
@@ -64,8 +64,8 @@
             if(this._resource.getValue()) {
                 init.push("bitmap_layer_set_bitmap(" + this._ID + ", " + this._canvas.getResources().getResource(this._resource.getValue()) + ");");
             }
-            if(this._bg_colour.getValue() != IB.ColourClear) {
-                init.push("bitmap_layer_set_background_color(" + this._ID + ", " + this._bg_colour.getValue().name + ");");
+            if(!this._bg_colour.fullyEquals(IB.ColourClear)) {
+                init.push("bitmap_layer_set_background_color(" + this._ID + ", " + this._bg_colour.generateCode() + ");");
             }
             return init;
         },
@@ -77,7 +77,7 @@
             _.each(properties, function(values, property) {
                 switch(property) {
                     case "bitmap_layer_set_background_color":
-                        this.setBackgroundColour(IB.ColourMap[values[0][1]]);
+                        this.setBackgroundColour(values[0][1]);
                         break;
                     case "bitmap_layer_set_bitmap":
                         if(mappings[values[0][1]]) {

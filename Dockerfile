@@ -61,7 +61,7 @@ RUN mkdir /sdk2 && \
   tar --strip-components=1 -xj -C /sdk2
 
 ENV SDK_THREE_CHANNEL=release
-ENV SDK_THREE_VERSION=4.0.1
+ENV SDK_THREE_VERSION=4.0
 
 # Install SDK 3
 RUN mkdir /sdk3 && \
@@ -76,5 +76,7 @@ RUN rm -rf bower_components && cd /tmp && python /code/manage.py bower install &
 
 RUN python manage.py compilemessages
 RUN python manage.py collectstatic --noinput
+
+RUN make -C /code/c-preload
 
 CMD ["sh", "docker_start.sh"]
