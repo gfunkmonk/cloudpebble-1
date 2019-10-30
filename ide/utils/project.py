@@ -1,12 +1,12 @@
-import logging
 import abc
 import json
+import os
 
 from django.utils.translation import ugettext as _
 
 __author__ = 'katharine'
 
-
+SRC_DIR = 'src'
 PACKAGE_MANIFEST = 'package.json'
 APPINFO_MANIFEST = 'appinfo.json'
 MANIFEST_KINDS = [PACKAGE_MANIFEST, APPINFO_MANIFEST]
@@ -33,70 +33,43 @@ class BaseProjectItem():
         return None
 
 
-def is_manifest(kind, contents):
-    """ A potentially valid manifest is a package.json file with a "pebble" object, or an appinfo.json file. """
-    if kind == PACKAGE_MANIFEST:
-        return 'pebble' in json.loads(contents)
-    elif kind == APPINFO_MANIFEST:
-        json.loads(contents)
-        return True
-    else:
-        return False
+def rank_manifest_path(dirname, kind):
+    """ Sort key for manifest files. Sort first by depth and add a penalty for being an appinfo.json """
+    return os.path.normpath(dirname).count('/') + (0.5 if kind == APPINFO_MANIFEST else 0)
 
 
 def find_project_root_and_manifest(project_items):
-    """ Given the contents of an archive, find a valid Pebble project.
+    """ Given the contents of an archive, find a (potentially) valid Pebble project.
+    A potentially valid Pebble project is either:
+      - An appinfo.json file next to an 'src/' directory which contains app sources
+      - A package.json file which has a 'pebble' key.
+    The function chooses the most shallow possible project and prefers package.json to appinfo.json if both are present.
     :param project_items: A list of BaseProjectItems
     :return: A tuple of (path_to_project, manifest BaseProjectItem)
     """
-    SRC_DIR = 'src/'
-    invalid_package_path = None
+    found_manifests = set()
+    found_src_files = set()
+
     for item in project_items:
-        base_dir = item.path
+        item_path = item.path
 
-        # Check if the file is one of the kinds of manifest file
-        for name in MANIFEST_KINDS:
-            dir_end = base_dir.rfind(name)
-            if dir_end == -1:
-                continue
-            # Ensure that the file is actually a manifest file
-            if dir_end + len(name) == len(base_dir):
-                content = item.read()
-                try:
-                    if is_manifest(name, content):
-                        manifest_item = item
-                        break
-                except ValueError as e:
-                    invalid_package_path = item.path
-        else:
-            # If the file is not a manifest file, continue looking for the manfiest.
+        # If the item looks like a manifest, add it to a set of potential manifests
+        item_dirname, item_basename = os.path.split(item_path)
+        if (item_basename == PACKAGE_MANIFEST and 'pebble' in json.loads(item.read())) or item_basename == APPINFO_MANIFEST:
+            found_manifests.add(((item_dirname, item_basename), item))
             continue
 
-        # The base dir is the location of the manifest file without the manifest filename.
-        base_dir = base_dir[:dir_end]
+        # Otherwise, add it to a set of source files if it is one.
+        if item_path.endswith(('.c', '.js', '.h')):
+            found_src_files.add(item_path)
 
-        # If we found a valid package.json, just return.
-        if name == PACKAGE_MANIFEST:
-            return base_dir, manifest_item
-
-        # Otherwise if it's an appinfo.json, check that there is a a source directory containing
-        # at least one source file.
-        for source_item in project_items:
-            source_dir = source_item.path
-            if source_dir[:dir_end] != base_dir:
-                continue
-            if not source_dir.endswith('.c') and not source_dir.endswith('.js'):
-                continue
-            if source_dir[dir_end:dir_end + len(SRC_DIR)] != SRC_DIR:
-                continue
-            break
-        else:
-            # If there was no source directory with a source file, keep looking for manifest files.
-            continue
-        return base_dir, manifest_item
-
-    # If we didn't find a valid project but we did find a broken manifest file, complain about it specifically.
-    if invalid_package_path:
-        raise InvalidProjectArchiveException(_("The file %s does not contain a valid JSON object." % invalid_package_path))
-    else:
-        raise InvalidProjectArchiveException(_("No valid project root found."))
+    # Choose the most shallow manifest file which has a non-empty source directory.
+    sorted_manifests = sorted(found_manifests, key=lambda x: rank_manifest_path(*x[0]))
+    for (base, kind), item in sorted_manifests:
+        if kind == "package.json":
+            return os.path.join(base, ''), item
+        src_dir = os.path.join(base, SRC_DIR, '')
+        for src_path in found_src_files:
+            if src_path.startswith(src_dir):
+                return os.path.join(base, ''), item
+    raise InvalidProjectArchiveException(_("No project root found."))
