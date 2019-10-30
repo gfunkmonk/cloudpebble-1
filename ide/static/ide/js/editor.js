@@ -4,6 +4,7 @@ CloudPebble.Editor = (function() {
     var unsaved_files = 0;
     var is_fullscreen = false;
     var resume_fullscreen = false;
+    var current_editor = null;
 
     var add_source_file = function(file) {
         CloudPebble.Sidebar.AddSourceFile(file, function() {
@@ -131,8 +132,9 @@ CloudPebble.Editor = (function() {
             if(language_has_autocomplete && USER_SETTINGS.autocomplete === 2) {
                 settings.extraKeys = {'Ctrl-Space': 'autocomplete'};
             }
+
             if(language_has_autocomplete && USER_SETTINGS.autocomplete !== 0) {
-                settings.extraKeys['Tab'] = function() {
+                settings.extraKeys['Tab'] = function selectNextArgument() {
                     var marks = code_mirror.getAllMarks();
                     var cursor = code_mirror.getCursor();
                     var closest = null;
@@ -165,7 +167,7 @@ CloudPebble.Editor = (function() {
             if(USER_SETTINGS.use_spaces) {
                 var spaces = Array(settings.indentUnit + 1).join(' ');
                 var oldTab = settings.extraKeys['Tab'];
-                settings.extraKeys['Tab'] = function(cm) {
+                settings.extraKeys['Tab'] = function indentMoreOrSelectNextArgument(cm) {
                     // If we already overrode tab, check that one.
                     if(oldTab) {
                         if(oldTab(cm) !== CodeMirror.Pass) {
@@ -215,12 +217,8 @@ CloudPebble.Editor = (function() {
                     return CodeMirror.Pass;
                 };
             }
-            settings.extraKeys['Cmd-/'] = function(cm) {
-                CodeMirror.commands.toggleComment(cm);
-            };
-            settings.extraKeys['Ctrl-/']  = function(cm) {
-                CodeMirror.commands.toggleComment(cm);
-            };
+            settings.extraKeys['Ctrl-/'] = 'toggleComment';
+            settings.extraKeys['Cmd-/'] = 'toggleComment';
 
             settings.gutters = ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'];
             if(file_kind_in(['js', 'json'])) {
@@ -264,10 +262,9 @@ CloudPebble.Editor = (function() {
 
             var help_shortcut = /Mac/.test(navigator.platform) ? 'Shift-Cmd-Ctrl-/' : 'Shift-Ctrl-Alt-/';
 
-            settings.extraKeys[help_shortcut] = function(cm) {
+            settings.extraKeys[help_shortcut] = function lookupFunction(cm) {
                 var pos = cm.cursorCoords();
                 var token = code_mirror.getTokenAt(cm.getCursor());
-
                 create_popover(cm, token.string, pos.left, pos.top);
             };
 
@@ -486,13 +483,22 @@ CloudPebble.Editor = (function() {
                     alert(gettext(interpolate("Failed to reload file. %s", [error])));
                 });
             };
+            
+            function set_save_shortcut() {
+                CloudPebble.GlobalShortcuts.SetShortcutHandlers({
+                    "PlatformCmd-S": save
+                });
+            }
+            set_save_shortcut();
 
             CloudPebble.Sidebar.SetActivePane(pane, {
                 id: 'source-' + file.id,
                 onRestore: function() {
+                    current_editor = code_mirror;
                     code_mirror.refresh();
                     _.defer(function() { code_mirror.focus(); });
                     check_safe();
+                    set_save_shortcut();
                     refresh_ib();
                 },
                 onSuspend: function() {
@@ -500,6 +506,7 @@ CloudPebble.Editor = (function() {
                         fullscreen(code_mirror, false);
                         resume_fullscreen = true;
                     }
+                    current_editor = null;
                 },
                 onDestroy: function() {
                     if(!was_clean) {
@@ -524,7 +531,7 @@ CloudPebble.Editor = (function() {
                 CloudPebble.Sidebar.ClearIcon('source-' + file.id);
             };
 
-            var save = function() {
+            function save() {
                 // Make sure we're up to date with whatever changed in IB.
                 if(ib_showing) {
                     var content = code_mirror.getValue();
@@ -582,16 +589,12 @@ CloudPebble.Editor = (function() {
                     },
                     pattern)
             };
+            code_mirror.show_rename_prompt = show_rename_prompt;
 
             var ib_pane = $('#ui-editor-pane-template').clone().removeClass('hide').appendTo(pane).hide();
             var ib_editor = new IB(ib_pane.find('.ui-canvas'), ib_pane.find('#ui-properties'), ib_pane.find('#ui-toolkit'), ib_pane.find('#ui-layer-list > div'));
             var ib_showing = false;
 
-            CloudPebble.GlobalShortcuts.SetShortcutHandlers({
-                save: function() {
-                    save().catch(alert);
-                }
-            });
 
             function toggle_ib() {
                 if(!ib_showing) {
@@ -767,13 +770,6 @@ CloudPebble.Editor = (function() {
                 fullscreen(code_mirror, true);
             }
 
-            var commands = {};
-            commands[gettext('Rename File')] = function() {
-                // We need to use a timeout because the rename prompt will conflict with the old prompt
-                setTimeout(show_rename_prompt, 0);
-            };
-            CloudPebble.FuzzyPrompt.ReplaceCommands(commands);
-
             // Tell Google
             // ga('send', 'event', 'file', 'open');
             return code_mirror;
@@ -781,6 +777,7 @@ CloudPebble.Editor = (function() {
             var error_box = $('<div class="alert alert-error"></div>');
             error_box.text(interpolate(gettext("Something went wrong: %s"), [error.message]));
             CloudPebble.Sidebar.SetActivePane(error_box, {id: ''});
+            throw error;
         }).finally(function() {
             CloudPebble.ProgressBar.Hide();
         });
@@ -825,14 +822,50 @@ CloudPebble.Editor = (function() {
                 edit_source_file(item.file);
             }
         });
-        var commands = {};
+        var global_commands = {};
         if (CloudPebble.ProjectProperties.is_runnable) {
-            commands[gettext('Run')] = run;
+            global_commands[gettext('Run')] = run;
         } else {
-            commands[gettext('Build')] = run;
+            global_commands[gettext('Build')] = run;
         }
+        var local_commands = {};
+        local_commands[gettext('Rename Source File')] = function() {
+            // We need to defer because the rename prompt will conflict with the old prompt
+            _.defer(function() {
+                current_editor.show_rename_prompt();
+            });
+        };
+
+        function neaten_command_name(str) {
+            var result = str.replace(/(\S)([A-Z])/g, '$1 $2').replace(/^./, function(str){ return str.toUpperCase(); });
+            result = result.replace('Doc ', 'Document ');
+            result = result.replace('Go ', 'Go To ');
+            result = result.replace('Del ', 'Delete ');
+            return result;
+        }
+
+        var codemirror_commands = [
+            {command: 'indentAuto', refocus: true},
+            {command: 'toggleComment', hint: 'Cmd-/ or Ctrl-/', refocus: true},
+            'find', 'replace', 'indentMore', 'indentLess', 'save', 'saveAll'
+        ];
+
+        _.each(codemirror_commands, function(entry) {
+            var command = !!entry.command ? entry.command : entry;
+            var name = (!!entry.name ? entry.name : neaten_command_name(command));
+            local_commands[name] = function() {
+                current_editor.execCommand(command);
+                if (!!entry.refocus) current_editor.focus();
+            };
+            local_commands[name].hint = !!entry.hint ? entry.hint : CloudPebble.GlobalShortcuts.GetShortcutForCommand(command);
+        });
+
+        CloudPebble.FuzzyPrompt.AddCommands(gettext('File'), local_commands, function() {
+            return (!!current_editor);
+        });
+
         
-        CloudPebble.FuzzyPrompt.AddCommands(commands);
+        CloudPebble.FuzzyPrompt.AddCommands(gettext('Actions'), global_commands);
 
     }
 

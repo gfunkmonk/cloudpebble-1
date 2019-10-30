@@ -1172,8 +1172,25 @@ span.cm-autofilled-end {
     text-align: left;
 }
 
-#fuzzy-results > div {
+.fuzzy-subheader {
+    font-weight: bold;
+    color: #666;
+    font-variant: small-caps;
+    margin-left: 1em;
 
+}
+
+.fuzzy-hint {
+    opacity: 0.5;
+}
+.fuzzy-hint::before {
+    content: ' <';
+}
+.fuzzy-hint::after {
+    content: '>';
+}
+
+#fuzzy-results > div {
     line-height: 28px;
     cursor: pointer;
     cursor: hand;
