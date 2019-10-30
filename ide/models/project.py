@@ -10,18 +10,12 @@ from django.core.exceptions import ValidationError
 from ide.models.files import ResourceFile, ResourceIdentifier, SourceFile, ResourceVariant
 from ide.models.dependency import Dependency
 from ide.models.meta import IdeModel
+from ide.models.published_media import PublishedMedia
 from ide.utils import generate_half_uuid
 from ide.utils.regexes import regexes
-from ide.utils.version import version_to_semver, semver_to_version, parse_sdk_version
+from ide.utils.version import version_to_semver, semver_to_version, parse_sdk_version, parse_semver
 
 __author__ = 'katharine'
-
-
-def version_validator(value):
-    try:
-        parse_sdk_version(value)
-    except ValueError:
-        raise ValidationError(_("Invalid version string. Versions should be major[.minor]."))
 
 
 class Project(IdeModel):
@@ -49,7 +43,7 @@ class Project(IdeModel):
     app_company_name = models.CharField(max_length=100, blank=True, null=True)
     app_short_name = models.CharField(max_length=100, blank=True, null=True)
     app_long_name = models.CharField(max_length=100, blank=True, null=True)
-    app_version_label = models.CharField(max_length=40, blank=True, null=True, default='1.0', validators=[version_validator])
+    app_version_label = models.CharField(max_length=40, blank=True, null=True, default='1.0')
     app_is_watchface = models.BooleanField(default=False)
     app_is_hidden = models.BooleanField(default=False)
     app_is_shown_on_communication = models.BooleanField(default=False)
@@ -89,13 +83,28 @@ class Project(IdeModel):
             self.app_keys = '[]'
         if self.sdk_version == '2':
             self.app_modern_multi_js = False
+        if self.project_type == 'package' and self.app_version_label == '1.0':
+            self.app_version_label = '1.0.0'
+
+    def set_published_media(self, published_media):
+        """ Set the project's publishedMedia entry
+        :param published_media: A list of publishedMedia dictionaries.
+        """
+        with transaction.atomic():
+            self.published_media.all().delete()
+            for item in published_media:
+                media = PublishedMedia.from_dict(self, item)
+                media.save()
+
+    def get_published_media(self):
+        return [item.to_dict() for item in self.published_media.all()]
 
     def set_dependencies(self, dependencies):
         """ Set the project's dependencies from a dictionary.
         :param dependencies: A dictionary of dependency->version
         """
         with transaction.atomic():
-            Dependency.objects.filter(project=self).delete()
+            self.dependencies.all().delete()
             for name, version in dependencies.iteritems():
                 dep = Dependency.objects.create(project=self, name=name, version=version)
                 dep.save()
@@ -176,13 +185,29 @@ class Project(IdeModel):
 
     @property
     def semver(self):
-        """ Get the app's version label formatted as a semver """
+        """ Get the app's version label formatted as a semver. """
+        if self.project_type == 'package':
+            try:
+                # Packages should have semver app_versions_labels...
+                parse_semver(self.app_version_label)
+                return self.app_version_label
+            except ValueError as e:
+                # but if they don't, we try to convert it from an app-style version label.
+                try:
+                    version_to_semver(self.app_version_label)
+                except:
+                    raise e
         return version_to_semver(self.app_version_label)
 
     @semver.setter
     def semver(self, value):
-        """ Set the app's version label from a semver string"""
-        self.app_version_label = semver_to_version(value)
+        """ Set the app's version label from a semver string. """
+        if self.project_type == 'package':
+            # This throws an error if the semver is invalid.
+            parse_semver(value)
+            self.app_version_label = value
+        else:
+            self.app_version_label = semver_to_version(value)
 
     @property
     def supported_platforms(self):
@@ -190,7 +215,7 @@ class Project(IdeModel):
         if self.sdk_version != '2':
             supported_platforms.extend(["basalt", "chalk"])
             if self.project_type != 'pebblejs':
-                supported_platforms.append("diorite")
+                supported_platforms.extend(["diorite", "emery"])
         return supported_platforms
 
     @property
@@ -219,7 +244,16 @@ class Project(IdeModel):
         is_sdk_2 = self.sdk_version == "2"
         if is_sdk_2 and self.uses_array_message_keys:
             raise ValidationError(_("SDK2 appKeys must be an object, not a list."))
+        if self.project_type != 'package':
+            try:
+                parse_sdk_version(self.app_version_label)
+            except ValueError:
+                raise ValidationError(_("Invalid version string. Versions should be major[.minor]."))
         if self.project_type == 'package':
+            try:
+                parse_semver(self.app_version_label)
+            except ValueError:
+                raise ValidationError(_("Invalid version string. Versions should be major.minor.patch"))
             if is_sdk_2:
                 raise ValidationError(_("Packages are not available for SDK 2"))
             if not self.app_modern_multi_js:

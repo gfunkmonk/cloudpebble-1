@@ -20,7 +20,11 @@ ADMINS = (
 
 DEFAULT_FROM_EMAIL = _environ.get('FROM_EMAIL', 'CloudPebble <cloudpebble@example.com>')
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ON_CLOUDFLARE = _environ.get('CLOUDFLARE') != ''
+if ON_CLOUDFLARE:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_CF_VISITOR', '{"scheme":"https"}')
+else:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 MANAGERS = ADMINS
 
@@ -110,6 +114,7 @@ MEDIA_ROOT = os.getcwd() + '/user_data/build_results/'
 
 SIMPLYJS_ROOT = os.getcwd() + '/ext/simplyjs/'
 PEBBLEJS_ROOT = os.getcwd() + '/ext/pebblejs/'
+C_PRELOAD_ROOT = os.getcwd() + '/c-preload/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -341,7 +346,6 @@ TD_ENABLED = _environ.get('TD_ENABLED', False)
 MAILCHIMP_API_KEY = _environ.get('MAILCHIMP_API_KEY', None)
 MAILCHIMP_LIST_ID = _environ.get('MAILCHIMP_LIST_ID', None)
 
-AWS_ENABLED = 'AWS_ENABLED' in _environ
 AWS_ACCESS_KEY_ID = _environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = _environ.get('AWS_SECRET_ACCESS_KEY', None)
 
@@ -360,7 +364,7 @@ COMPLETION_CERTS = _environ.get('COMPLETION_CERTS', os.getcwd() + '/completion-c
 
 QEMU_URLS = _environ.get('QEMU_URLS', 'http://qemu/').split(',')
 QEMU_LAUNCH_AUTH_HEADER = _environ.get('QEMU_LAUNCH_AUTH_HEADER', 'secret')
-QEMU_LAUNCH_TIMEOUT = int(_environ.get('QEMU_LAUNCH_TIMEOUT', 15))
+QEMU_LAUNCH_TIMEOUT = int(_environ.get('QEMU_LAUNCH_TIMEOUT', 25))
 
 PHONE_SHORTURL = _environ.get('PHONE_SHORTURL', 'cpbl.io')
 

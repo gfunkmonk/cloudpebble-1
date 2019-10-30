@@ -55,8 +55,8 @@ RUN mkdir /sdk2 && \
   curl -L "https://s3.amazonaws.com/assets.getpebble.com/sdk3/sdk-core/sdk-core-${SDK_TWO_VERSION}.tar.bz2" | \
   tar --strip-components=1 -xj -C /sdk2
 
-ENV SDK_THREE_CHANNEL=beta
-ENV SDK_THREE_VERSION=4.0-beta16
+ENV SDK_THREE_CHANNEL=release
+ENV SDK_THREE_VERSION=4.0
 
 # Install SDK 3
 RUN mkdir /sdk3 && \
@@ -70,5 +70,7 @@ WORKDIR /code
 RUN rm -rf bower_components && cd /tmp && python /code/manage.py bower install && mv bower_components /code/
 
 RUN python manage.py compilemessages
+
+RUN make -C /code/c-preload
 
 CMD ["sh", "docker_start.sh"]

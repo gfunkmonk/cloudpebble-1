@@ -25,10 +25,11 @@ __author__ = 'katharine'
 logger = logging.getLogger(__name__)
 
 
-def add_project_to_archive(z, project, prefix=''):
+def add_project_to_archive(z, project, prefix='', suffix=''):
     source_files = SourceFile.objects.filter(project=project)
     resources = ResourceFile.objects.filter(project=project)
     prefix += re.sub(r'[^\w]+', '_', project.name).strip('_').lower()
+    prefix += suffix
 
     for source in source_files:
         path = os.path.join(prefix, source.project_path)
@@ -61,16 +62,9 @@ def create_archive(project_id):
 
         send_td_event('cloudpebble_export_project', project=project)
 
-        if not settings.AWS_ENABLED:
-            outfile = '%s%s/%s.zip' % (settings.EXPORT_DIRECTORY, u, prefix)
-            os.makedirs(os.path.dirname(outfile), 0755)
-            shutil.copy(filename, outfile)
-            os.chmod(outfile, 0644)
-            return '%s%s/%s.zip' % (settings.EXPORT_ROOT, u, prefix)
-        else:
-            outfile = '%s/%s.zip' % (u, prefix)
-            s3.upload_file('export', outfile, filename, public=True, content_type='application/zip')
-            return '%s%s' % (settings.EXPORT_ROOT, outfile)
+        outfile = '%s/%s.zip' % (u, prefix)
+        s3.upload_file('export', outfile, filename, public=True, content_type='application/zip')
+        return '%s%s' % (settings.EXPORT_ROOT, outfile)
 
 
 @task(acks_late=True)
@@ -81,17 +75,22 @@ def export_user_projects(user_id):
         filename = temp.name
         with zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED) as z:
             for project in projects:
-                add_project_to_archive(z, project, prefix='cloudpebble-export/')
+                add_project_to_archive(z, project, prefix='cloudpebble-export/', suffix='-%d' % project.id)
+
+        send_td_event('cloudpebble_export_all_projects', user=user)
 
         # Generate a URL
         u = uuid.uuid4().hex
-        outfile = '%s%s/%s.zip' % (settings.EXPORT_DIRECTORY, u, 'cloudpebble-export')
-        os.makedirs(os.path.dirname(outfile), 0755)
-        shutil.copy(filename, outfile)
-        os.chmod(outfile, 0644)
-
-        send_td_event('cloudpebble_export_all_projects', user=user)
-        return '%s%s/%s.zip' % (settings.EXPORT_ROOT, u, 'cloudpebble-export')
+        if not settings.AWS_ENABLED:
+            outfile = '%s%s/%s.zip' % (settings.EXPORT_DIRECTORY, u, 'cloudpebble-export')
+            os.makedirs(os.path.dirname(outfile), 0755)
+            shutil.copy(filename, outfile)
+            os.chmod(outfile, 0644)
+            return '%s%s/%s.zip' % (settings.EXPORT_ROOT, u, 'cloudpebble-export')
+        else:
+            outfile = '%s/%s.zip' % (u, 'cloudpebble-export')
+            s3.upload_file('export', outfile, filename, public=True, content_type='application/zip')
+            return '%s%s' % (settings.EXPORT_ROOT, outfile)
 
 
 def get_filename_variant(file_name, resource_suffix_map):
@@ -127,10 +126,6 @@ class ArchiveProjectItem(BaseProjectItem):
     @property
     def path(self):
         return self.entry.filename
-
-
-def ends_with_any(s, options):
-    return any(s.endswith(end) for end in options)
 
 
 @task(acks_late=True)
@@ -191,12 +186,13 @@ def do_import_archive(project_id, archive, delete_project=False):
 
                 with transaction.atomic():
                     # We have a resource map! We can now try importing things from it.
-                    project_options, media_map, dependencies = load_manifest_dict(manifest_dict, manifest_kind)
+                    project_options, media_map, dependencies, published_media = load_manifest_dict(manifest_dict, manifest_kind)
 
                     for k, v in project_options.iteritems():
                         setattr(project, k, v)
                     project.full_clean()
                     project.set_dependencies(dependencies)
+                    project.set_published_media(published_media)
 
                     RES_PATH = project.resources_path
 
