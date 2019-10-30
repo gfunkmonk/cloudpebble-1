@@ -588,7 +588,9 @@ CloudPebble.Editor = (function() {
                             prompt.error(gettext(interpolate("Failed to rename file. %s", [error.message])));
                         });
                     },
-                    pattern)
+                    pattern);
+                // Pre-select the filename without the extension.
+                $('#modal-text-input-value')[0].setSelectionRange(0, file.name.lastIndexOf('.'));
             };
             code_mirror.show_rename_prompt = show_rename_prompt;
 
