@@ -180,6 +180,18 @@ class TestImportArchive(CloudpebbleTestCase):
         self.assertEqual(project.source_files.filter(file_name='lib.js', target='common').count(), 1)
         self.assertEqual(project.source_files.filter(file_name='app.js', target='pkjs').count(), 1)
 
+    def test_import_source_subdirectories(self):
+        bundle = build_bundle({
+            'src/c/subdirectory/lib.c': '',
+            'src/c/main.c': '',
+            'package.json': make_package()
+        })
+        do_import_archive(self.project_id, bundle)
+        project = Project.objects.get(pk=self.project_id)
+        self.assertEqual(project.source_files.filter(file_name='main.c').count(), 1)
+        self.assertEqual(project.source_files.filter(file_name='subdirectory/lib.c').count(), 1)
+        print [x.file_name for x in project.source_files.all()]
+
     def test_import_published_media(self):
         published_media = [{
             'name': 'TEST',
@@ -199,8 +211,7 @@ class TestImportArchive(CloudpebbleTestCase):
         })
         do_import_archive(self.project_id, bundle)
         project = Project.objects.get(pk=self.project_id)
-        self.assertEqual(project.get_published_media(), published_media)
-
+        self.assertEqual(project.get_published_media(), published_media
 
 @mock.patch('ide.models.s3file.s3', fake_s3)
 class TestImportLibrary(CloudpebbleTestCase):
