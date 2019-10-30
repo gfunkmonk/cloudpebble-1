@@ -25,7 +25,7 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
   && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
   && rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc
 
-RUN npm install npm -g
+RUN npm install -g npm jshint
 
 # Django stuff
 
@@ -56,7 +56,7 @@ RUN mkdir /sdk2 && \
   tar --strip-components=1 -xj -C /sdk2
 
 ENV SDK_THREE_CHANNEL=release
-ENV SDK_THREE_VERSION=3.12
+ENV SDK_THREE_VERSION=4.0
 
 # Install SDK 3
 RUN mkdir /sdk3 && \
@@ -70,5 +70,7 @@ WORKDIR /code
 RUN rm -rf bower_components && cd /tmp && python /code/manage.py bower install && mv bower_components /code/
 
 RUN python manage.py compilemessages
+
+RUN make -C /code/c-preload
 
 CMD ["sh", "docker_start.sh"]

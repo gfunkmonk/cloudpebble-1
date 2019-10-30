@@ -15,13 +15,44 @@ CloudPebble.ProgressBar = (function() {
         },
         Hide: function() {
             hide();
+        },
+        Error: function(msg) {
+            $('#progress-pane').find('.progress').addClass('progress-danger').removeClass('progress-striped')
+                .after($('<div>').text(msg).css({margin: 'auto', width: '300px'}));
         }
     };
 })();
 
+/** Define calculated properties based on the project type. */
+CloudPebble.ProjectProperties = (function() {
+    var spec = {
+        'js_only': ['simplyjs', 'pebblejs', 'rocky'],
+        'is_runnable': ['native', 'pebblejs', 'simplyjs', 'rocky'],
+        'supports_message_keys': ['native', 'package'],
+        'supports_aplite': ['native', 'package', 'simplyjs', 'pebblejs'],
+        'supports_jslint': ['native', 'package', 'pebblejs', 'rocky']
+    };
+    var obj = {
+        Init: function() {
+            _.each(spec, function(types, property) {
+                Object.defineProperty(obj, property, {
+                    value: _.contains(types, CloudPebble.ProjectInfo.type)
+                });
+            });
+        }
+    };
+    return obj;
+})();
+
+CloudPebble.TargetNames =   {
+    'app': gettext("App Source"),
+    'public': gettext("Public headers"),
+    'pkjs': gettext("PebbleKit JS"),
+    'worker': gettext("Worker source"),
+    'common': gettext("Shared JavaScript")
+};
+
 CloudPebble.ProjectInfo = {};
-
-
 
 CloudPebble.Init = function() {
     jquery_csrf_setup();
@@ -30,6 +61,7 @@ CloudPebble.Init = function() {
     Ajax.Get('/ide/project/' + PROJECT_ID + '/info').then(function(data) {
         CloudPebble.ProjectInfo = data;
 
+        CloudPebble.ProjectProperties.Init();
         CloudPebble.Compile.Init();
         CloudPebble.Editor.Init();
         CloudPebble.Resources.Init();
@@ -39,7 +71,6 @@ CloudPebble.Init = function() {
         CloudPebble.Dependencies.Init();
         CloudPebble.Documentation.Init();
         CloudPebble.FuzzyPrompt.Init();
-        CloudPebble.ProgressBar.Hide();
 
         // Add source files.
         $.each(data.source_files, function(index, value) {
@@ -49,6 +80,7 @@ CloudPebble.Init = function() {
         $.each(data.resources, function(index, value) {
             CloudPebble.Resources.Add(value);
         });
+        CloudPebble.PublishedMedia.Init();
         CloudPebble.Emulator.init();
         CloudPebble.YCM.initialise();
         CloudPebble.Sidebar.SetProjectType(data.type);
@@ -58,8 +90,11 @@ CloudPebble.Init = function() {
             $('.sdk3-only').hide();
         }
         return null;
+    }).then(function() {
+        CloudPebble.ProgressBar.Hide();
     }).catch(function(err) {
-        alert("Something went wrong:\n" + err.message);
+        CloudPebble.ProgressBar.Error(err);
+        throw err;
     });
 
     window.addEventListener('beforeunload', function(e) {
@@ -113,19 +148,36 @@ CloudPebble.Prompts = {
         $('#modal-text-confirm-button').unbind('click').click(submit);
         $('#modal-text-input form').unbind('submit').submit(submit);
     },
-    Confirm: function(title, prompt, callback) {
+    Confirm: function(title, prompt, callback, hide_callback) {
         $('#modal-warning-prompt-title').text(title);
         $('#modal-warning-prompt-warning').text(prompt);
-        $('#modal-warning-prompt').modal();
+        var modal = $('#modal-warning-prompt').modal();
         $('#modal-warning-prompt-button').unbind('click').click(function() {
             $('#modal-warning-prompt').modal('hide');
             callback();
+        });
+        if(hide_callback) {
+            modal.on('hide', function() {
+                modal.off('hide');
+                hide_callback();
+            });
+        }
+    },
+    ConfirmLink: function(title, prompt, url) {
+        $('#modal-confirm-link-prompt-title').text(title);
+        $('#modal-confirm-link-prompt-warning').text(prompt);
+        var modal = $('#modal-confirm-link-prompt').modal();
+        $('#modal-confirm-link-prompt-button').attr('href', url).unbind('click').click(function() {
+            modal.modal('hide');
+        });
+        modal.on('hide', function() {
+            modal.off('hide');
         });
     },
     Progress: {
         Show: function(title, text, hide_callback) {
             var modal = $('#generic-progress').modal('show');
-            modal.find('.progress').removeClass('progress-danger').addClass('progress-striped');
+            modal.find('.progress').removeClass('progress-danger progress-success').addClass('progress-striped');
             modal.find('h3').text(title);
             modal.find('p').text(text || '');
             if(hide_callback) {
@@ -134,6 +186,10 @@ CloudPebble.Prompts = {
                     hide_callback();
                 });
             }
+        },
+        Success: function() {
+            var modal = $('#generic-progress').modal('show');
+            modal.find('.progress').addClass('progress-success').removeClass('progress-striped');
         },
         Fail: function() {
             var modal = $('#generic-progress').modal('show');
@@ -184,46 +240,3 @@ CloudPebble.Utils = {
         return interpolate(ngettext("%s second", "%s seconds", n), [n]);
     }
 };
-
-CloudPebble.GlobalShortcuts = (function() {
-    var make_shortcut_checker = function (command) {
-        if (!(command.indexOf('-') > -1)) {
-            command = _.findKey(CodeMirror.keyMap.default, _.partial(_.isEqual, command));
-        }
-        var split = command.split('-');
-        var modifier = ({
-            'ctrl': 'ctrlKey',
-            'cmd': 'metaKey'
-        })[split[0].toLowerCase()];
-        return function (e) {
-            return (e[modifier] && String.fromCharCode(e.keyCode) == split[1]);
-        }
-    };
-
-
-    var global_shortcuts = {};
-
-    $(document).keydown(function (e) {
-        if (!e.isDefaultPrevented()) {
-            _.each(global_shortcuts, function (shortcut) {
-                if (shortcut.checker(e)) {
-                    shortcut.func(e);
-                    e.preventDefault();
-                }
-            });
-        }
-    });
-
-    return {
-        SetShortcutHandlers: function (shortcuts) {
-            var new_shortcuts = _.mapObject(shortcuts, function (func, key) {
-                return {
-                    checker: make_shortcut_checker(key),
-                    func: func
-                };
-
-            });
-            _.extend(global_shortcuts, new_shortcuts);
-        }
-    }
-})();

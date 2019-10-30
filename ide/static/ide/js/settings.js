@@ -19,6 +19,18 @@ CloudPebble.Settings = (function() {
         if(CloudPebble.ProjectInfo.type != 'native') {
             pane.find('.native-only').hide();
         }
+        if (CloudPebble.ProjectInfo.type == 'package') {
+            pane.find('.not-package').hide();
+        }
+        if(!(CloudPebble.ProjectProperties.supports_aplite)) {
+            pane.find('.supports-aplite').hide();
+        }
+        if(!(CloudPebble.ProjectProperties.supports_message_keys)) {
+            pane.find('.supports-message-keys').hide();
+        }
+        if(!(CloudPebble.ProjectProperties.supports_jslint)) {
+            pane.find('.supports-jslint').hide();
+        }
         if(CloudPebble.ProjectInfo.sdk_version != '3') {
             pane.find('.sdk3-only').hide();
         }
@@ -48,6 +60,8 @@ CloudPebble.Settings = (function() {
             var build_aplite = pane.find('#settings-build-aplite:visible').prop('checked');
             var build_basalt = pane.find('#settings-build-basalt:visible').prop('checked');
             var build_chalk = pane.find('#settings-build-chalk:visible').prop('checked');
+            var build_diorite = pane.find('#settings-build-diorite:visible').prop('checked');
+            var build_emery = pane.find('#settings-build-emery:visible').prop('checked');
 
             var app_keys = (app_key_array_style ? [] : {});
             var app_key_names = [];
@@ -85,24 +99,31 @@ CloudPebble.Settings = (function() {
             if(short_name.replace(/\s/g, '') == '') {
                 throw new Error(gettext("You must specify a short name."));
             }
-            if(long_name.replace(/\s/g, '') == '') {
-                throw new Error(gettext("You must specify a long name."));
+
+            if (CloudPebble.ProjectProperties.is_runnable) {
+                if(long_name.replace(/\s/g, '') == '') {
+                    throw new Error(gettext("You must specify a poop name."));
+                }
             }
+
             if(company_name.replace(/\s/g, '') == '') {
                 throw new Error(gettext("You must specify a company name."));
             }
             // This is not an appropriate use of a regex, but we have to have it for the HTML5 pattern attribute anyway,
             // so we may as well reuse the effort here.
             // It validates that the format matches x[.y] with x, y in [0, 255].
-            if(!version_label.match(VERSION_REGEX)) {
+            if(CloudPebble.ProjectInfo.type != 'package' && !version_label.match(REGEXES.sdk_version)) {
                 throw new Error(gettext("You must specify a valid version number."));
             }
-            if(!app_uuid.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/)) {
+            if(CloudPebble.ProjectInfo.type == 'package' && !version_label.match(REGEXES.semver)) {
+                throw new Error(gettext("You must specify a valid version semver."));
+            }
+            if(!app_uuid.match(REGEXES.uuid)) {
                 throw new Error(gettext("You must specify a valid UUID (of the form 00000000-0000-0000-0000-000000000000)"));
             }
 
 
-            if(sdk_version == '3' && !(build_aplite || build_basalt || build_chalk)) {
+            if(sdk_version == '3' && !(build_aplite || build_basalt || build_chalk || build_diorite || build_emery)) {
                 throw new Error(gettext("You must build your app for at least one platform."));
             }
 
@@ -115,6 +136,12 @@ CloudPebble.Settings = (function() {
             }
             if(build_chalk) {
                 target_platforms.push('chalk');
+            }
+            if(build_diorite) {
+                target_platforms.push('diorite');
+            }
+            if(build_emery) {
+                target_platforms.push('emery');
             }
             var app_platforms = target_platforms.join(',');
             
@@ -290,7 +317,7 @@ CloudPebble.Settings = (function() {
             if (CloudPebble.ProjectInfo.sdk_version == '2' && sdk != '2' && !sdk_version_change_confirmed) {
                 e.stopPropagation();
                 $(this).val('2');
-                var message = gettext("Are you sure you want to upgrade this project to SDK 3? THIS CANNOT BE UNDONE.");
+                var message = gettext("Are you sure you want to upgrade this project to SDK 4? THIS CANNOT BE UNDONE.");
                 CloudPebble.Prompts.Confirm(gettext("UPGRADE SDK"), message, function() {
                     sdk_version_change_confirmed = true;
                     if(sdk == '3') {
@@ -353,7 +380,7 @@ CloudPebble.Settings = (function() {
 
         live_form.init();
 
-        CloudPebble.Sidebar.SetActivePane(pane, 'settings');
+        CloudPebble.Sidebar.SetActivePane(pane, {id: 'settings'});
 
         configure_appkey_table(app_uses_array_appkeys());
     };
@@ -389,7 +416,8 @@ CloudPebble.Settings = (function() {
             commands["GitHub"] = CloudPebble.GitHub.Show;
             commands[gettext("Timeline")] = CloudPebble.Timeline.show;
             commands[gettext("Add New Source File")] = CloudPebble.Editor.Create;
-            CloudPebble.FuzzyPrompt.AddCommands(commands);
+            commands[gettext("Dependencies")] = CloudPebble.Dependencies.Show;
+            CloudPebble.FuzzyPrompt.AddCommands(gettext('Navigation'), commands);
             settings_template = $('#settings-pane-template').remove().removeClass('hide');
         },
         AddResource: function(resource) {

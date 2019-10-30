@@ -8,14 +8,18 @@ var ConnectionType = {
     Qemu: 2,
     QemuAplite: 6,
     QemuBasalt: 10,
-    QemuChalk: 18
+    QemuChalk: 18,
+    QemuDiorite: 34,
+    QemuEmery: 66
 };
 
 var ConnectionPlatformNames = {
     2: 'aplite',
     6: 'aplite',
     10: 'basalt',
-    18: 'chalk'
+    18: 'chalk',
+    34: 'diorite',
+    66: 'emery'
 };
 
 var SharedPebble = new (function() {
@@ -41,11 +45,15 @@ var SharedPebble = new (function() {
         gettext("Firing missiles…"),
         gettext("Never giving you up…"),
         gettext("Never letting you down…"),
-        gettext("Getting twenty percent cooler…")
+        gettext("Here comes Tom!")
     ];
 
     function isRound(kind) {
         return ((kind & ConnectionType.QemuChalk) == ConnectionType.QemuChalk);
+    }
+
+    function isRobert(kind) {
+        return ((kind & ConnectionType.QemuEmery) == ConnectionType.QemuEmery);
     }
 
     function _getEmulator(kind) {
@@ -72,13 +80,13 @@ var SharedPebble = new (function() {
         mEmulator.on('disconnected', hide_emulator);
         $('#sidebar').addClass('with-emulator');
         var canvas_size = URL_BOOT_IMG[ConnectionPlatformNames[kind]].size;
+        emulator_container.removeClass('emulator-round emulator-robert');
         if (isRound(kind)) {
             emulator_container.addClass('emulator-round');
-            emulator_container.find('canvas').attr('width', canvas_size[0]).attr('height', canvas_size[1]);
+        } else if (isRobert(kind)) {
+            emulator_container.addClass('emulator-robert');
         }
-        else {
-            emulator_container.removeClass('emulator-round');
-        }
+        emulator_container.find('canvas').attr('width', canvas_size[0]).attr('height', canvas_size[1]);
         mEmulator.on('disconnected', handleEmulatorDisconnected);
         return mEmulator.connect().catch(function(err) {
             hide_emulator();

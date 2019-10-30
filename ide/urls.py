@@ -4,7 +4,8 @@ from ide.api import proxy_keen, check_task, get_shortlink, heartbeat
 from ide.api.git import github_push, github_pull, set_project_repo, create_project_repo
 from ide.api.phone import ping_phone, check_phone, list_phones, update_phone
 from ide.api.project import project_info, compile_project, last_build, build_history, build_log, create_project, \
-    save_project_settings, save_project_dependencies, delete_project, begin_export, import_zip, import_github, do_import_gist
+    save_project_settings, save_project_dependencies, delete_project, begin_export, import_zip, import_github, do_import_gist, \
+    get_projects, save_published_media
 from ide.api.resource import create_resource, resource_info, delete_resource, update_resource, show_resource, \
     delete_variant
 from ide.api.source import create_source_file, load_source_file, source_file_is_safe, save_source_file, \
@@ -21,11 +22,13 @@ urlpatterns = patterns(
     '',
     url(r'^$', index, name='index'),
     url(r'^import/github/(?P<github_account>.+?)/(?P<github_project>.+?)$', index, name='index'),
+    url(r'^projects', get_projects, name='get_projects'),
     url(r'^project/create', create_project, name='create_project'),
     url(r'^project/(?P<project_id>\d+)$', view_project, name='project'),
     url(r'^project/(?P<project_id>\d+)/info', project_info, name='project_info'),
     url(r'^project/(?P<project_id>\d+)/save_settings', save_project_settings, name='save_project_settings'),
     url(r'^project/(?P<project_id>\d+)/save_dependencies', save_project_dependencies, name='save_project_dependencies'),
+    url(r'^project/(?P<project_id>\d+)/save_published_media', save_published_media, name='save_published_media'),
     url(r'^project/(?P<project_id>\d+)/delete', delete_project, name='delete_project'),
     url(r'^project/(?P<project_id>\d+)/create_source_file', create_source_file, name='create_source_file'),
     url(r'^project/(?P<project_id>\d+)/source/(?P<file_id>\d+)/load', load_source_file, name='load_source_file'),

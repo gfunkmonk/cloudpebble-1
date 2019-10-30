@@ -1,10 +1,6 @@
 import re
 
-# Match major[.minor], where major and minor are numbers between 0 and 255 with no leading 0s
-SDK_VERSION_REGEX = r"^(0|[1-9]\d?|1\d{2}|2[0-4]\d|25[0-5])(\.(0|[1-9]\d?|1\d{2}|2[0-4]\d|25[0-5]))?$"
-
-# Match major.minor.0, where major and minor are numbers between 0 and 255 with no leading 0s
-SEMVER_REGEX = r"^(0|[1-9]\d?|1\d{2}|2[0-4]\d|25[0-5])\.(0|[1-9]\d?|1\d{2}|2[0-4]\d|25[0-5])\.0$"
+from ide.utils.regexes import regexes
 
 
 def parse_sdk_version(version):
@@ -12,7 +8,7 @@ def parse_sdk_version(version):
     :param version: should be "major[.minor]"
     :return: (major, minor)
     """
-    parsed = re.match(SDK_VERSION_REGEX, version)
+    parsed = re.match(regexes.SDK_VERSION, version)
     if not parsed:
         raise ValueError("Invalid version {}".format(version))
     major = parsed.group(1)
@@ -30,13 +26,13 @@ def version_to_semver(version):
 
 def parse_semver(semver):
     """ Parse a pebble/npm compatible semver
-    :param semver: should be "major.minor.0"
+    :param semver: should be "major.minor.patch"
     :return: (major, minor)
     """
-    parsed = re.match(SEMVER_REGEX, semver)
+    parsed = re.match(regexes.SEMVER, semver)
     if not parsed:
         raise ValueError("Invalid semver {}".format(semver))
-    return parsed.group(1), parsed.group(2)
+    return parsed.group(1), parsed.group(2), parsed.group(3)
 
 
 def semver_to_version(semver):
@@ -44,4 +40,5 @@ def semver_to_version(semver):
     :param semver: should be major.minor.0
     :return: "major.minor"
     """
-    return "{}.{}".format(*parse_semver(semver))
+    major, minor, patch = parse_semver(semver)
+    return "{}.{}".format(major, minor)

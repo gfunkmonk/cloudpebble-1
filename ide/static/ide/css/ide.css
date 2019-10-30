@@ -31,7 +31,7 @@ strong {
     top: 0;
     bottom: 0;
     overflow: auto;
-    width: 210px;
+    width: 250px;
     font-family: PFD-Regular, 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: large;
     padding-left: 40px;
@@ -91,7 +91,7 @@ ul.nav-pills {
     background: #333333 url('../img/background-logo.png') no-repeat center;
     position: absolute;
     top: 0;
-    left: 250px;
+    left: 285px;
     bottom: 0;
     right: 0;
 }
@@ -162,6 +162,8 @@ ul.nav-pills {
     -o-transition: height 0.5s;
     transition: height 0.5s;
     width: 250px;
+    padding-left: 18px;
+    padding-right: 17px;
     height: 230px;
     margin-bottom: 20px;
     text-align: center;
@@ -178,12 +180,12 @@ ul.nav-pills {
 #emulator-container canvas {
     position: absolute;
     top: 28px;
-    left: 53px;
+    left: 71px;
     background-color: #aaa;
 }
 
 #emulator-container.emulator-round canvas {
-    left: 35px;
+    left: 53px;
     border-radius: 100px;
 }
 #emulator-container.emulator-round {
@@ -194,26 +196,51 @@ ul.nav-pills {
     right: 10px;
 }
 .emulator-round .select.qemu-button {
-    left: 221px;
+    left: 239px;
     top: 100px;
 }
 .emulator-round .down.qemu-button {
 	-webkit-transform: rotate(30deg);
 	    -ms-transform: rotate(30deg);
 	        transform: rotate(30deg);
-    left: 207px;
+    left: 225px;
     top: 134px;
 }
 .emulator-round .up.qemu-button {
-    left: 207px;
+    left: 225px;
     top: 29px;
 	-webkit-transform: rotate(330deg);
 	    -ms-transform: rotate(330deg);
 	        transform: rotate(330deg);
 }
 .emulator-round .back.qemu-button {
-    top: 79px;
-    left: 0;
+    top: 80px;
+    left: 16px;
+}
+
+#emulator-container.emulator-robert canvas {
+    top: 0;
+    left: 45px;
+}
+
+#emulator-container.emulator-robert {
+    width: 285px;
+    padding: 0;
+}
+
+#emulator-container.emulator-robert .configure {
+    right: inherit;
+    left: 7px;
+}
+
+.emulator-robert .select.qemu-button,
+.emulator-robert .up.qemu-button,
+.emulator-robert .down.qemu-button {
+    left: 248px;
+}
+
+.emulator-robert .back.qemu-button {
+    left: 11px;
 }
 
 .qemu-button {
@@ -232,24 +259,24 @@ ul.nav-pills {
 
 .qemu-button.up {
     top: 5px;
-    left: 208px;
+    left: 226px;
 }
 
 .qemu-button.select {
     width: 35px;
     height: 37px;
-    left: 208px;
+    left: 226px;
     top: 93px;
 }
 
 .qemu-button.down {
     top: 147px;
-    left: 208px;
+    left: 226px;
 }
 
 .qemu-button.back {
     top: 37px;
-    left: 8px;
+    left: 26px;
 }
 
 #emulator-container .power {
@@ -263,7 +290,7 @@ ul.nav-pills {
     position: absolute;
     cursor: pointer;
     top: 200px;
-    right: 53px;
+    right: 71px;
 }
 
 /* Emulator sensor prompt */
@@ -527,16 +554,27 @@ table.kv-table .kv-remove {
     margin-left: 110px;
 }
 
-.compilation-pane #run-on-phone .btn,
-.compilation-pane #run-on-qemu .btn,
-.compilation-pane .build-buttons .btn {
+.compilation-pane .compilation-buttons.two-buttons .btn {
+    width: 287px;
+    margin: 0 4px;
+}
+
+.compilation-pane .compilation-buttons.three-buttons .btn{
     width: 188px;
     margin-right: 9px;
 }
 
-.compilation-pane #run-on-phone .btn:last-of-type,
-.compilation-pane #run-on-qemu .btn:last-of-type,
-.compilation-pane .build-buttons .btn:last-child {
+.compilation-pane .compilation-buttons.four-buttons .btn{
+    width: 137px;
+    margin: 0 4px;
+}
+
+.compilation-pane .compilation-buttons.five-buttons .btn {
+    width: 111px;
+    margin: 0 2px;
+}
+
+.compilation-pane .compilation-buttons .btn:last-child {
     margin-right: 0;
 }
 
@@ -641,7 +679,7 @@ table.build-results tr.pending .build-state {
     clear: both;
 }
 
-.resource-pane input:not([type=checkbox]):not([type=submit]) {
+.resource-pane input:not([type=checkbox]):not([type=submit]):not([type=number]) {
     width: 435px;
 }
 
@@ -676,6 +714,36 @@ table.build-results tr.pending .build-state {
     width: 188px;
 }
 
+/* Published media pane */
+
+.media-item:not(:first-child) .help-block {
+    display: none;
+}
+
+.media-tool-buttons button {
+    width: initial;
+    min-width: 130px;
+    margin-right: 10px;
+}
+
+.sidebar-error::after {
+    content: "!";
+}
+
+.sidebar-error {
+    background: #e5171f;
+    display: inline-block;
+    color: white;
+    width: 22px;
+    text-align: center;
+    font-family: serif;
+    border-radius: 20px;
+    padding-right: 1px;
+    margin-top: -1px;
+}
+.sidebar-error.hide {
+    display: none;
+}
 
 /* Dependancies pane */
 
@@ -685,6 +753,24 @@ table.build-results tr.pending .build-state {
     padding-right: 60px;
     width: 590px;
 }
+
+.dependencies-pane .help-block {
+    width: initial;
+    margin: initial;
+}
+
+.dependencies-header-name {
+    color: #d0d0d0;
+}
+.dependencies-header a:hover .dependencies-header-name {
+    color: inherit;
+}
+
+#dependencies-headers th.dependencies-headers-version {
+    /* version column of headers table */
+    min-width: 5em;
+}
+
 
 .package-suggestion {
     text-overflow: ellipsis;
@@ -715,6 +801,11 @@ table.build-results tr.pending .build-state {
     color: white;
 }
 
+.checkbox-table td:last-child {
+    width: 30px;
+    padding-bottom: 20px;
+}
+
 
 /* UI Editor pane */
 
@@ -741,7 +832,7 @@ table.build-results tr.pending .build-state {
     float: left;
 }
 
-#ui-layer-list {
+#ui-settings {
     padding-top: 20px;
 }
 
@@ -1107,8 +1198,25 @@ span.cm-autofilled-end {
     text-align: left;
 }
 
-#fuzzy-results > div {
+.fuzzy-subheader {
+    font-weight: bold;
+    color: #666;
+    font-variant: small-caps;
+    margin-left: 1em;
 
+}
+
+.fuzzy-hint {
+    opacity: 0.5;
+}
+.fuzzy-hint::before {
+    content: ' <';
+}
+.fuzzy-hint::after {
+    content: '>';
+}
+
+#fuzzy-results > div {
     line-height: 28px;
     cursor: pointer;
     cursor: hand;
@@ -1156,9 +1264,8 @@ button#add-filter {
     width: 450px;
     height: 37px;
 }
-
-.edit-resource-target-options > div {
-    float: left;
+.pane-boxes.pane-3-boxes div:nth-child(3n+1) {
+    clear: both;
 }
 .edit-resource-target-options:after {
     clear: both;
@@ -1166,7 +1273,7 @@ button#add-filter {
     display: table;
 }
 
-.edit-resource-target-platforms-enabled:not(:checked) ~ .edit-resource-targets {
+.form-section-toggle:not(:checked) ~ .form-toggleable-section {
     display: none;
 }
 
@@ -1181,7 +1288,15 @@ button#add-filter {
 }
 .image-platform-preview h4 {
     text-align: center;
-    margin-bottom: 1em;
+}
+
+.image-platform-preview > .help-block {
+    margin: auto;
+    text-align: center;
+}
+
+.image-platform-preview .pane-boxes h4 {
+    margin-top: 0.5em;
 }
 
 .pane-boxes img {
@@ -1196,7 +1311,6 @@ button#add-filter {
     min-height: 36px;
 }
 
-/*TODO: decide on some colours*/
 .label-aplite {
     background-color: #00B293;
 }
@@ -1206,6 +1320,14 @@ button#add-filter {
 .label-chalk {
     background-color: #3a87ad;
 }
+.label-diorite {
+    background-color: #c49d4f;
+}
+
+.label-emory: {
+    background-color: orangered;
+}
+
 .font-preview .font-tag-preview {
     line-height: 40px;
     color: white;
@@ -1313,4 +1435,18 @@ label .text-icon {
 
 .text-core .text-wrap .text-tags .text-tag .text-button .text-label {
   line-height: 30px;
+}
+
+.spinner {
+    position: absolute;
+    right: 20px;
+    width: 16px;
+    height: 16px;
+}
+
+.spinner-dark {
+    background-image: url("/static/ide/img/darkspinner.gif");
+}
+.spinner-light {
+    background-image: url("/static/ide/img/spinner.gif");
 }

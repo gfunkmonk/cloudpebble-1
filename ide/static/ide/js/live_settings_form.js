@@ -24,15 +24,15 @@ function make_live_settings_form(options) {
         on_save: null,
         on_change: null,
         on_progress_started: null,
+        auto_save: true,
         on_progress_complete: null,
-        progress_timeout: 1000,
+        progress_timeout: 300,
         control_selector: 'input, select, textarea',
         changeable_control_selector: "input[type!='number'], textarea",
         label_selector: '.control-group label',
         group_selector: '.control-group'
     });
     if (!_.isFunction(opts.save_function)
-        || (!_.isObject(opts.form))
         || (!_.isFunction(opts.error_function))
         || (!!opts.on_change && !_.isFunction(opts.on_change))
         || (!!opts.on_save && !_.isFunction(opts.on_save))) {
@@ -120,6 +120,7 @@ function make_live_settings_form(options) {
             }
         }).catch(function (error) {
             on_save_error(error);
+            throw error;
         }).finally(function() {
             saving = false;
             if (next_save) {
@@ -173,6 +174,9 @@ function make_live_settings_form(options) {
 
     /** Set up the live form's event hooks and add status icons for all form groups */
     function init() {
+        if (!_.isObject(opts.form)) {
+            throw new Error("No form selector specified");
+        }
         // When a form-reset button is clicked, submit the form instantly
         opts.form.bind("reset", function() {
             var values = {};
@@ -206,10 +210,13 @@ function make_live_settings_form(options) {
 
         // Set up the save-on-change hook
         opts.form.on("change", opts.control_selector, function(e) {
+            show_changed_icon($(this));
             if (_.isFunction(opts.on_change)) {
                 opts.on_change(this);
             }
-            save($(this), e);
+            if (opts.auto_save) {
+                save($(this), e);
+            }
         });
 
         // While typing in text forms, show the changed icon
@@ -221,17 +228,14 @@ function make_live_settings_form(options) {
     }
 
     return {
-        clearIcons: function() {
-            clear_changed_icons();
-        },
         addElement: function(elements, changed) {
             add_status_icons(elements, changed);
         },
         init: function() {
             init();
         },
-        save: function(element) {
-            save(element);
+        save: function(element, event) {
+            return save(element, event);
         }
     };
 }

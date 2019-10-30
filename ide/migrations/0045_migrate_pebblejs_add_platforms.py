@@ -13,7 +13,7 @@ class Migration(DataMigration):
         orm.Project.objects.filter(project_type='pebblejs').update(app_platforms='aplite,basalt')
 
     def backwards(self, orm):
-        orm.Project.objects.filter(projecy_type='pebblejs', app_platforms='aplite,basalt').update(app_platforms=None)
+        orm.Project.objects.filter(project_type='pebblejs', app_platforms='aplite,basalt').update(app_platforms=None)
 
     models = {
         u'auth.group': {

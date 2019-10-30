@@ -232,6 +232,9 @@ Pebble = function(proxy, token) {
     };
 
     var manipulate_url = function(url) {
+        if (url.startsWith("data")) {
+            return url;
+        }
         var hash_parts = url.split('#');
         var query_parts = hash_parts[0].split('?');
         console.log(hash_parts, query_parts);
@@ -543,6 +546,10 @@ Pebble = function(proxy, token) {
         send_qemu_command(QEmu.Compass, pack("Ib", [(65536 - heading * 182.044)|0, calibration]));
     };
 
+    this.emu_set_peek = function(showing) {
+        send_qemu_command(QEmu.TimelinePeek, pack("b", [showing]));
+    };
+
     function id_to_uuid(id) {
         return _.UUID.v5(id + ".pins.developer.getpebble.com", "6ba7b810-9dad-11d1-80b4-00c04fd430c8");
     }
@@ -798,7 +805,8 @@ Pebble = function(proxy, token) {
         Accel: 6,
         VibrationNotification: 7,
         Button: 8,
-        TimeFormat: 9
+        TimeFormat: 9,
+        TimelinePeek: 10
     };
 
     var send_message = function(endpoint, message) {
@@ -932,11 +940,17 @@ Pebble.version_to_platform = function(version) {
         9: 'chalk',
         10: 'basalt',
         11: 'chalk',
+        12: 'diorite',
+        13: 'emery',
+        14: 'diorite',
         0xFF: 'aplite',
         0xFE: 'aplite',
         0xFD: 'basalt',
         0xFC: 'basalt',
-        0xFB: 'chalk'
+        0xFB: 'chalk',
+        0xFA: 'diorite',
+        0xF9: 'emery',
+        0xF8: 'diorite'
     };
     return mapping[version.running.platform_version];
 };

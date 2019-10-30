@@ -20,7 +20,11 @@ ADMINS = (
 
 DEFAULT_FROM_EMAIL = _environ.get('FROM_EMAIL', 'CloudPebble <cloudpebble@example.com>')
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ON_CLOUDFLARE = _environ.get('CLOUDFLARE') != ''
+if ON_CLOUDFLARE:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_CF_VISITOR', '{"scheme":"https"}')
+else:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 MANAGERS = ADMINS
 
@@ -110,6 +114,7 @@ MEDIA_ROOT = os.getcwd() + '/user_data/build_results/'
 
 SIMPLYJS_ROOT = os.getcwd() + '/ext/simplyjs/'
 PEBBLEJS_ROOT = os.getcwd() + '/ext/pebblejs/'
+C_PRELOAD_ROOT = os.getcwd() + '/c-preload/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -155,7 +160,7 @@ BOWER_INSTALLED_APPS = (
     'alexgorbatchev/jquery-textext',
     'codemirror#5.15.2',
     'bluebird#3.3.4',
-    'kanaka/noVNC',
+    'kanaka/noVNC#v0.5',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -331,7 +336,6 @@ GITHUB_HOOK_TEMPLATE = _environ.get('GITHUB_HOOK', 'http://example.com/ide/proje
 SDK2_PEBBLE_WAF = _environ.get('SDK2_PEBBLE_WAF', '/sdk2/pebble/waf')
 SDK3_PEBBLE_WAF = _environ.get('SDK3_PEBBLE_WAF', '/sdk3/pebble/waf')
 
-NPM_MANIFEST_SUPPORT = _environ.get('NPM_MANIFEST_SUPPORT', '') != ''
 NPM_BINARY = _environ.get('NPM_BINARY', 'npm')
 
 ARM_CS_TOOLS = _environ.get('ARM_CS_TOOLS', '/arm-cs-tools/bin/')
@@ -342,7 +346,6 @@ TD_ENABLED = _environ.get('TD_ENABLED', False)
 MAILCHIMP_API_KEY = _environ.get('MAILCHIMP_API_KEY', None)
 MAILCHIMP_LIST_ID = _environ.get('MAILCHIMP_LIST_ID', None)
 
-AWS_ENABLED = 'AWS_ENABLED' in _environ
 AWS_ACCESS_KEY_ID = _environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = _environ.get('AWS_SECRET_ACCESS_KEY', None)
 
@@ -361,9 +364,11 @@ COMPLETION_CERTS = _environ.get('COMPLETION_CERTS', os.getcwd() + '/completion-c
 
 QEMU_URLS = _environ.get('QEMU_URLS', 'http://qemu/').split(',')
 QEMU_LAUNCH_AUTH_HEADER = _environ.get('QEMU_LAUNCH_AUTH_HEADER', 'secret')
-QEMU_LAUNCH_TIMEOUT = int(_environ.get('QEMU_LAUNCH_TIMEOUT', 15))
+QEMU_LAUNCH_TIMEOUT = int(_environ.get('QEMU_LAUNCH_TIMEOUT', 25))
 
 PHONE_SHORTURL = _environ.get('PHONE_SHORTURL', 'cpbl.io')
+
+WAF_NODE_PATH = _environ.get('WAF_NODE_PATH', None)
 
 import djcelery
 djcelery.setup_loader()

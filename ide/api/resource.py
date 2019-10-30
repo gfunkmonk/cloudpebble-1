@@ -1,5 +1,4 @@
 import json
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
@@ -53,7 +52,7 @@ def create_resource(request, project_id):
                 resources.append(ResourceIdentifier.objects.create(resource_file=rf, **resource_options))
             if posted_file is not None:
                 variant = ResourceVariant.objects.create(resource_file=rf, tags=",".join(str(int(t)) for t in new_tags))
-                variant.save_file(posted_file, posted_file.size)
+                variant.save_file(posted_file, file_size=posted_file.size)
 
             rf.save()
     except IntegrityError as e:
@@ -186,13 +185,13 @@ def update_resource(request, project_id, resource_id):
                 variant.save()
             if 'file' in request.FILES:
                 variant = resource.variants.create(tags=",".join(str(int(t)) for t in new_tags))
-                variant.save_file(request.FILES['file'], request.FILES['file'].size)
+                variant.save_file(request.FILES['file'], file_size=request.FILES['file'].size)
 
             # We may get sent a list of pairs telling us which variant gets which replacement file
             for tags, file_index in replacement_map:
                 variant = resource.variants.get(tags=tags)
                 replacement = replacement_files[int(file_index)]
-                variant.save_file(replacement, replacement.size)
+                variant.save_file(replacement, file_size=replacement.size)
 
             if file_name and resource.file_name != file_name:
                 resource.file_name = file_name
@@ -238,13 +237,8 @@ def show_resource(request, project_id, resource_id, variant):
     }
     content_disposition = "attachment; filename=\"%s\"" % resource.file_name
     content_type = content_types[resource.kind]
-    if settings.AWS_ENABLED:
-        headers = {
-            'response-content-disposition': content_disposition,
-            'Content-Type': content_type
-        }
-        return HttpResponseRedirect(s3.get_signed_url('source', variant.s3_path, headers=headers))
-    else:
-        response = HttpResponse(open(variant.local_filename), content_type=content_type)
-        response['Content-Disposition'] = content_disposition
-        return response
+    headers = {
+        'response-content-disposition': content_disposition,
+        'Content-Type': content_type
+    }
+    return HttpResponseRedirect(s3.get_signed_url('source', variant.s3_path, headers=headers))
