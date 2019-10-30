@@ -28,7 +28,7 @@
 
         // Window properties
         var mProperties = {
-            bg: new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourWhite),
+            bg: new IB.Properties.Colour(pgettext("background colour", "Background"), IB.ColourWhite, true),
             fullscreen: new IB.Properties.Bool(gettext("Fullscreen"), CloudPebble.ProjectInfo.app_is_watchface || CloudPebble.ProjectInfo.sdk_version == '3')
         };
         mProperties.bg.on('change', handleBackgroundChange, this);
@@ -44,13 +44,20 @@
         function init(parent) {
             mNode = $('<div class="ib-canvas">');
             mNode.on('mousedown', handleMouseDown);
+            mNode.toggleClass('ib-canvas-sdk2', CloudPebble.ProjectInfo.sdk_version == "2");
+            mNode.toggleClass('ib-canvas-sdk3', CloudPebble.ProjectInfo.sdk_version == "3");
             mNode.appendTo(parent);
 
+            render();
+
+            handleFullscreenChange(mProperties.fullscreen.getValue());
+        }
+
+        function render() {
             mScaleX = parent.width() / 144;
             mScaleY = parent.height() / 168;
 
             var cssTransform = 'scale(' + mScaleX + ',' + mScaleY + ')';
-
             mNode.css({
                 width: 144,
                 height: 168,
@@ -66,8 +73,6 @@
                 overflow: 'hidden',
                 'background-color': mProperties.bg.getValue().css
             });
-
-            handleFullscreenChange(mProperties.fullscreen.getValue());
         }
 
         /**
@@ -235,7 +240,7 @@
 
         function handleBackgroundChange(colour) {
             mNode.css({
-                'background-color': colour.css
+                'background-color': colour[IB.colourMode].css
             });
             self.trigger('changeBackground', colour);
         }
@@ -271,7 +276,7 @@
             self.trigger('removelayer', layer);
             self.trigger('changed');
             layer = null;
-        }
+        };
 
         function handleChangeID(oldID, newID) {
             if(mChildren[oldID]) {
@@ -340,14 +345,24 @@
             mNode.empty();
         };
 
+
+        /**
+         * Re-render the canvas and all its children
+         */
+        this.refresh = function() {
+            render();
+            _.invoke(mChildOrder, 'render', mNode);
+        };
+
         this.generateDeclaration = function() {
             return ["static Window *s_window;"];
         };
 
         this.generateInitialiser = function() {
             var initialiser = ["s_window = window_create();"];
-            if(mProperties.bg.getValue() != IB.ColourWhite) {
-                initialiser.push("window_set_background_color(s_window, " + mProperties.bg.getValue() + ");");
+
+            if(!mProperties.bg.fullyEquals(IB.ColourWhite)) {
+                initialiser.push("window_set_background_color(s_window, " + mProperties.bg.generateCode() + ");");
             }
             initialiser.push("#ifndef PBL_SDK_3");
             initialiser.push("  window_set_fullscreen(s_window, " + mProperties.fullscreen.getValue() + ");");
@@ -363,7 +378,7 @@
             _.each(properties, function(values, property) {
                 switch(property) {
                     case "window_set_background_color":
-                        mProperties.bg.setValue(IB.ColourMap[values[0][1]]);
+                        mProperties.bg.setValue(values[0][1]);
                         break;
                     case "window_set_fullscreen":
                         mProperties.fullscreen.setValue(JSON.parse(values[0][1]));
@@ -382,7 +397,7 @@
 
         this.getBackgroundColour = function() {
             return mProperties.bg.getValue();
-        }
+        };
 
         this.getResources = function() {
             return mResources;

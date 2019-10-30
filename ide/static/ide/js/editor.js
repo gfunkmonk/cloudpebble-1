@@ -582,7 +582,7 @@ CloudPebble.Editor = (function() {
             };
 
             var ib_pane = $('#ui-editor-pane-template').clone().removeClass('hide').appendTo(pane).hide();
-            var ib_editor = new IB(ib_pane.find('.ui-canvas'), ib_pane.find('#ui-properties'), ib_pane.find('#ui-toolkit'), ib_pane.find('#ui-layer-list > div'));
+            var ib_editor = new IB(ib_pane.find('.ui-canvas'), ib_pane.find('#ui-properties'), ib_pane.find('#ui-toolkit'), ib_pane.find('#ui-layer-list > div'), ib_pane.find('#ui-settings'));
             var ib_showing = false;
 
             CloudPebble.GlobalShortcuts.SetShortcutHandlers({
@@ -728,12 +728,14 @@ CloudPebble.Editor = (function() {
             button_holder.append(error_area);
             button_holder.append(run_btn);
             button_holder.append(save_btn);
-            button_holder.append(discard_btn);
-            button_holder.append(rename_btn);
 
             if(source.indexOf('// BEGIN AUTO-GENERATED UI CODE; DO NOT MODIFY') != -1) {
                 button_holder.append(ib_btn);
             }
+
+            button_holder.append(rename_btn);
+            button_holder.append(discard_btn);
+
             // You must have an app.js in pebblejs projects.
             if(CloudPebble.ProjectInfo.type != 'pebblejs' || file.name != 'app.js') {
                 button_holder.append(delete_btn);
