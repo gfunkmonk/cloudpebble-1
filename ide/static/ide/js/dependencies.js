@@ -279,6 +279,7 @@ CloudPebble.Dependencies = (function() {
             if (!val) return;
             cache.lookup_module(val).then(function(data) {
                 on_submit(val, data.version ? version_prefix + data.version : null);
+                return null;
             }).catch(function() {
                 on_submit(val, null);
             });
@@ -609,9 +610,6 @@ CloudPebble.Dependencies = (function() {
             show_dependencies_pane();
         },
         Init: function() {
-            var commands = {};
-            commands[gettext("Dependencies")] = CloudPebble.Dependencies.Show;
-            CloudPebble.FuzzyPrompt.AddCommands(commands);
             dependencies_template = $('#dependencies-pane-template').remove().removeClass('hide');
             alerts.init(dependencies_template);
 

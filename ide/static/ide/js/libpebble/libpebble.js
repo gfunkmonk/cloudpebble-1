@@ -232,6 +232,9 @@ Pebble = function(proxy, token) {
     };
 
     var manipulate_url = function(url) {
+        if (url.startsWith("data")) {
+            return url;
+        }
         var hash_parts = url.split('#');
         var query_parts = hash_parts[0].split('?');
         console.log(hash_parts, query_parts);
@@ -938,6 +941,7 @@ Pebble.version_to_platform = function(version) {
         10: 'basalt',
         11: 'chalk',
         12: 'diorite',
+        13: 'emery',
         14: 'diorite',
         0xFF: 'aplite',
         0xFE: 'aplite',
@@ -945,6 +949,7 @@ Pebble.version_to_platform = function(version) {
         0xFC: 'basalt',
         0xFB: 'chalk',
         0xFA: 'diorite',
+        0xF9: 'emery',
         0xF8: 'diorite'
     };
     return mapping[version.running.platform_version];

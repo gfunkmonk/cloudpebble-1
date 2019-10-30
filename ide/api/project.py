@@ -279,6 +279,7 @@ def save_published_media(request, project_id):
         return {'published_media': project.get_published_media()}
 
 
+
 @require_POST
 @login_required
 @json_view

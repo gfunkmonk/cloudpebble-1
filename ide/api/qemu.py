@@ -33,6 +33,7 @@ def launch_emulator(request):
         'basalt': '3.0',
         'chalk': '3.0',
         'diorite': '3.0',
+        'emery': '3.0',
     }
     version = versions[platform]
     redis_key = 'qemu-user-%s-%s' % (user_id, platform)
@@ -40,7 +41,7 @@ def launch_emulator(request):
     if qemu_instance is not None:
         qemu_instance = json.loads(qemu_instance)
         try:
-            response = requests.post(qemu_instance['ping_url'], timeout=2, verify=settings.COMPLETION_CERTS)
+            response = requests.post(qemu_instance['ping_url'], timeout=2)
             response.raise_for_status()
             response = response.json()
         except (requests.RequestException, ValueError) as e:
@@ -64,8 +65,7 @@ def launch_emulator(request):
                                          'oauth': oauth,
                                          'tz_offset': tz_offset},
                                    headers={'Authorization': settings.QEMU_LAUNCH_AUTH_HEADER},
-                                   timeout=settings.QEMU_LAUNCH_TIMEOUT,
-                                   verify=settings.COMPLETION_CERTS)
+                                   timeout=settings.QEMU_LAUNCH_TIMEOUT)
             result.raise_for_status()
             response = result.json()
             url = urlparse.urlsplit(server)
@@ -81,7 +81,7 @@ def launch_emulator(request):
             logger.warning("Got HTTP error from QEMU launch. Content:\n%s", e.response.text)
         except (requests.RequestException, ValueError) as e:
             logger.error("Error launching qemu: %s", e)
-        raise InternalServerError(_("Unable to create emulator instance."))
+    raise InternalServerError(_("Unable to create emulator instance."))
 
 
 @login_required

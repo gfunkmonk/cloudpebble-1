@@ -681,6 +681,9 @@ msgstr "預設"
 msgid "Displayed on the Pebble's main menu. Must be a 28x28 file in PNG format."
 msgstr "在 Pebble 的主功能表上顯示。必須為 PNG 格式的 28x28 檔案。"
 
+msgid "Displayed on the Pebble's main menu. Must be a 25x25 file in PNG format."
+msgstr "在 Pebble 的主功能表上顯示。必須為 PNG 格式的 25x25 檔案。"
+
 #: ide/templates/ide/project/settings.html:55
 msgid "Company Name"
 msgstr "公司名稱"
@@ -764,10 +767,6 @@ msgstr "屬性"
 #: ide/templates/ide/project/ui-editor.html:13
 msgid "Toolkit"
 msgstr "工具組"
-
-#: ide/utils/prepreprocessor.py:28
-msgid "Illegal include '%(include)s' -> '%(path)s'"
-msgstr "不合法包括 '%(include)s' -> '%(path)s'"
 
 #: ide/utils/project.py:34
 msgid "No project root found."

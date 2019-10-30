@@ -78,6 +78,17 @@ def run_compile(build_result):
         try:
             os.chdir(base_dir)
 
+            environ = os.environ.copy()
+            environ.update({
+                'LD_PRELOAD': settings.C_PRELOAD_ROOT + 'libpreload.so',
+                'ALLOWED_FOR_CREATE': '/tmp',
+                'ALLOWED_FOR_READ': '/usr/local/include:/usr/include:/usr/lib:/lib:/lib64:/tmp' \
+                                    ':/dev/urandom:/proc/self:/proc/self/maps:/proc/mounts' \
+                                    ':/app/.heroku:/app/sdk2:/app/sdk3:/app/arm-cs-tools',
+                'PATH': '{}:{}'.format(settings.ARM_CS_TOOLS, environ['PATH']),
+                'HOME': '/app'
+            })
+
             # Install dependencies if there are any
             dependencies = project.get_dependencies()
             if dependencies:
@@ -85,22 +96,19 @@ def run_compile(build_result):
                 # it here but we will do it anyway just to be extra safe.
                 for version in dependencies.values():
                     validate_dependency_version(version)
-                npm_command = [settings.NPM_BINARY, "install", "--ignore-scripts"]
-                output = subprocess.check_output(npm_command, stderr=subprocess.STDOUT, preexec_fn=_set_resource_limits)
-                subprocess.check_output([settings.NPM_BINARY, "dedupe"], stderr=subprocess.STDOUT, preexec_fn=_set_resource_limits)
+                npm_command = [settings.NPM_BINARY, "install", "--ignore-scripts", "--no-bin-links"]
+                output = subprocess.check_output(npm_command, stderr=subprocess.STDOUT, preexec_fn=_set_resource_limits, env=environ)
+                subprocess.check_output([settings.NPM_BINARY, "dedupe"], stderr=subprocess.STDOUT, preexec_fn=_set_resource_limits, env=environ)
 
             if project.sdk_version == '2':
-                environ = os.environ.copy()
-                environ['PATH'] = '{}:{}'.format(settings.ARM_CS_TOOLS, environ['PATH'])
                 command = [settings.SDK2_PEBBLE_WAF, "configure", "build"]
             elif project.sdk_version == '3':
-                environ = os.environ.copy()
-                environ['PATH'] = '{}:{}'.format(settings.ARM_CS_TOOLS, environ['PATH'])
                 if settings.WAF_NODE_PATH:
                     environ['NODE_PATH'] = settings.WAF_NODE_PATH
                 command = [settings.SDK3_PEBBLE_WAF, "configure", "build"]
             else:
                 raise Exception("invalid sdk version.")
+
             output += subprocess.check_output(command, stderr=subprocess.STDOUT, preexec_fn=_set_resource_limits,
                                               env=environ)
         except subprocess.CalledProcessError as e:
@@ -132,7 +140,7 @@ def run_compile(build_result):
                         build_result.total_size = s.st_size
                         # Now peek into the zip to see the component parts
                         with zipfile.ZipFile(temp_file, 'r') as z:
-                            for platform in ['aplite', 'basalt', 'chalk', 'diorite']:
+                            for platform in ['aplite', 'basalt', 'chalk', 'diorite', 'emery']:
                                 store_size_info(project, build_result, platform, z)
 
                     except Exception as e:
@@ -143,7 +151,7 @@ def run_compile(build_result):
                         save_debug_info(base_dir, build_result, BuildResult.DEBUG_APP, 'aplite', os.path.join(base_dir, 'build', 'pebble-app.elf'))
                         save_debug_info(base_dir, build_result, BuildResult.DEBUG_WORKER, 'aplite', os.path.join(base_dir, 'build', 'pebble-worker.elf'))
                     else:
-                        for platform in ['aplite', 'basalt', 'chalk', 'diorite']:
+                        for platform in ['aplite', 'basalt', 'chalk', 'diorite', 'emery']:
                             save_debug_info(base_dir, build_result, BuildResult.DEBUG_APP, platform, os.path.join(base_dir, 'build', '%s/pebble-app.elf' % platform))
                             save_debug_info(base_dir, build_result, BuildResult.DEBUG_WORKER, platform, os.path.join(base_dir, 'build', '%s/pebble-worker.elf' % platform))
 

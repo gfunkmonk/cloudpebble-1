@@ -699,6 +699,9 @@ msgstr "Par défaut"
 msgid "Displayed on the Pebble's main menu. Must be a 28x28 file in PNG format."
 msgstr "Affiché dans le menu principal de la Pebble. Doit être un fichier PNG au format 28x28."
 
+msgid "Displayed on the Pebble's main menu. Must be a 25x25 file in PNG format."
+msgstr "Affiché dans le menu principal de la Pebble. Doit être un fichier PNG au format 25x25."
+
 #: ide/templates/ide/project/settings.html:55
 msgid "Company Name"
 msgstr "Compagnie"
@@ -783,10 +786,6 @@ msgstr "Propriétés"
 #: ide/templates/ide/project/ui-editor.html:13
 msgid "Toolkit"
 msgstr "Boîte à outils"
-
-#: ide/utils/prepreprocessor.py:28
-msgid "Illegal include '%(include)s' -> '%(path)s'"
-msgstr "Include invalide '%(include)s' -> '%(path)s'"
 
 #: ide/utils/project.py:34
 msgid "No project root found."

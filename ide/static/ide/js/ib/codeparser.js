@@ -31,14 +31,34 @@
          * @private
          */
         _getPropertiesForLayerID: function(id) {
+            // Matches functions where 'id' is the first argument, and extracts the function name and its other arguments
             var regex = new RegExp('^\\s*([a-zA-Z_]+)\\s*\\(' + id + ',\\s*(.+)\\);$', 'gm');
+            // Splits the remaining arguments by any commas, which aren't followed by closing brackets
+            var splitRegex = /,(?![^,]*\))/g;
             var groups;
             var props = Object.create(null);
+            // Look through the document for any functions whose first arguments are the desired layer ID.
             while((groups = regex.exec(this._source))) {
                 if(!props[groups[1]]) {
                     props[groups[1]] = [];
                 }
-                props[groups[1]].push(_.invoke([groups[2]].concat(groups[2].split(',')), 'trim'));
+                var fullString = groups[2].trim();
+                // Extract all function arguments. If any arguments are functions containing more arguments,
+                // extract the arguments of those functions.
+                var innerArgumentsRegex = /([A-Za-z_]+)\s*\((.*?)\)/g;
+                var args = _.chain(groups[2].split(splitRegex))
+                    .invoke('trim')
+                    .map(function(argument) {
+                        var innerGroup;
+                        if ((innerGroup = innerArgumentsRegex.exec(argument)) != null) {
+                            return _([innerGroup[1]].concat(innerGroup[2].split(splitRegex))).invoke('trim');
+                        }
+                        else {
+                            return argument;
+                        }
+                    }).value();
+                var prop = [fullString].concat(args);
+                props[groups[1]].push(prop);
             }
             return props;
         },

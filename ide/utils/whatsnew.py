@@ -46,6 +46,7 @@ NEW_THINGS = [
     ["You can now develop your own packages in CloudPebble! Select the Pebble Package project type, and then test your package by including it from your other projects in the Dependency pane."],
     ["Write watchfaces with <a href='https://developer.pebble.com/blog/2016/08/15/introducing-rockyjs-watchfaces/'>JavaScript on the Freakin' Watch</a>!"],
     ["You can now specify Published Media in CloudPebble. Check out the <a href='https://developer.pebble.com/guides/tools-and-resources/app-metadata/#published-media' target='_blank'>developer documentation</a> for details."],
+    ["The window editor now supports colours! You can choose colours for both monochrome and colour watches for each layer, and preview both variants inside the editor."],
 ]
 
 
